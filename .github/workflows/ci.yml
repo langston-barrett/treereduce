@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+
+env:
+  # The NAME makes it easier to copy/paste snippets from other CI configs
+  NAME: treedd
+
+jobs:
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cancel previous run
+      uses: styfle/cancel-workflow-action@0.10.0
+      with:
+        access_token: ${{ github.token }}
+
+    - uses: actions/checkout@v3
+
+    - name: Build docs
+      uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "doc/"
+
+    - name: Push docs
+      uses: peaceiris/actions-gh-pages@v3
+      if: ${{ github.ref == 'refs/heads/main' }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: doc/build/html
+
+    - name: Package docs
+      shell: bash
+      run: |
+        tar -cvf doc.tar.gz doc/build/html/*
+
+    - name: Upload docs
+      uses: actions/upload-artifact@v3
+      if: github.repository == 'langston-barrett/treedd'
+      with:
+        name: "${{ env.NAME }}-docs"
+        path: "*.tar.gz"
+        if-no-files-found: error
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Format
+      run: cargo fmt && git diff --exit-code
+    - name: Deps
+      run: |
+        rustup update
+        rustup component add clippy
+    - name: Lint
+      run: make lint
+
+  static:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Deps
+      run: |
+        sudo apt-get install -y musl-tools
+        rustup target add x86_64-unknown-linux-musl
+    - run: make static
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: make build
+    - run: make test

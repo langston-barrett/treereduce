@@ -1,0 +1,19 @@
+[package]
+name = "treedd-c"
+description = "Fast, syntax-aware program reducer (delta debugger) for C"
+version = "0.0.0"
+keywords = ["delta-debugging", "program-reducer", "c"]
+edition = "2021"
+authors = ["Langston Barrett <langston.barrett@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/langston-barrett/treedd"
+repository = "https://github.com/langston-barrett/treedd"
+
+[dependencies]
+# anyhow = "1.0"
+# clap = { version = "4.0", features = ["derive"] }
+# rayon = "1.5"
+treedd = { version = "0.0.0", path = "../treedd" }
+tree-sitter = "0.20"
+tree-sitter-c = "0.20"

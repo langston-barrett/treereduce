@@ -1,0 +1,45 @@
+name: release
+
+on:
+  push:
+    branches:
+    - release*
+    tags:
+    - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Deps
+      run: |
+        sudo apt-get install -y musl-tools
+        rustup target add x86_64-unknown-linux-musl
+
+    - name: Build static executables
+      run: |
+        make static
+        cp target/x86_64-unknown-linux-musl/release/treedd-c .
+
+    - uses: ncipollo/release-action@v1
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      with:
+        artifacts: "treedd-c"
+        artifactErrorsFailBuild: true
+        body: "See [CHANGELOG.md](https://github.com/langston-barrett/treedd/blob/main/doc/CHANGELOG.md)."
+        draft: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Publish to crates.io
+      env:
+        CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        # Only push on actual release tags
+        PUSH: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      run: |
+        if [[ ${PUSH} == true ]]; then
+          cargo publish --token ${CRATES_IO_TOKEN}
+        else
+          cargo publish --dry-run --token ${CRATES_IO_TOKEN}
+        fi

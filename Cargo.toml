@@ -1,0 +1,10 @@
+[workspace]
+
+members = [
+    "crates/treedd",
+    "crates/treedd-c",
+]
+
+# https://nnethercote.github.io/perf-book/build-configuration.html
+[profile.release]
+lto = true
