@@ -92,11 +92,6 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference internal" href="comparison.html">
-   Comparison to Other Tools
-  </a>
- </li>
- <li class="toctree-l1">
   <a class="reference internal" href="contributing.html">
    Contributing
   </a>
@@ -104,6 +99,11 @@
  <li class="toctree-l1">
   <a class="reference internal" href="install.html">
    Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="overview.html">
+   Overview
   </a>
  </li>
  <li class="toctree-l1">
@@ -313,6 +313,15 @@ title="Print to PDF"
                 
   <div class="section" id="algorithm">
 <h1>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> uses several strategies during program minimization:</p>
+<ul class="simple">
+<li><p><em>Deletion</em> (<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/1">#1</a>): When a child is optional, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> attempts to delete
+it. For example, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> might delete the <code class="docutils literal notranslate"><span class="pre">const</span></code> in <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">int</span> <span class="pre">x;</span></code>.</p></li>
+<li><p><em>Delta debugging</em> (<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/2">#2</a>): When a node has a list of children, <code class="docutils literal notranslate"><span class="pre">treedd</span></code>
+uses <em>delta debugging</em> to delete as many as possible in an efficient way.</p></li>
+<li><p><em>Hoisting</em> (<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/3">#3</a>): Nodes with a recursive structure may be replaced by
+their descendants, e.g. replacing <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">+</span> <span class="pre">(3</span> <span class="pre">*</span> <span class="pre">y)</span></code> with just <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p></li>
+</ul>
 <p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> brings together many improvements to the delta-debugging algorithm for
 tree-structured inputs from the academic literature. Following the naming
 schemes in the literature, we might call its algorithm “recursive hierarchical

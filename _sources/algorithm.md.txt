@@ -1,5 +1,14 @@
 # Algorithm
 
+`treedd` uses several strategies during program minimization:
+
+- *Deletion* ([#1][#1]): When a child is optional, `treedd` attempts to delete
+  it. For example, `treedd` might delete the `const` in `const int x;`.
+- *Delta debugging* ([#2][#2]): When a node has a list of children, `treedd`
+  uses *delta debugging* to delete as many as possible in an efficient way.
+- *Hoisting* ([#3][#3]): Nodes with a recursive structure may be replaced by
+  their descendants, e.g. replacing `5 + (3 * y)` with just `y`.
+
 `treedd` brings together many improvements to the delta-debugging algorithm for
 tree-structured inputs from the academic literature. Following the naming
 schemes in the literature, we might call its algorithm "recursive hierarchical
@@ -76,3 +85,7 @@ To read:
 - Hodován, R., Kiss, Á. and Gyimóthy, T., 2017, September. Coarse hierarchical
   delta debugging. In 2017 IEEE international conference on software maintenance
   and evolution (ICSME) (pp. 194-203). IEEE.
+
+[#1]: https://github.com/langston-barrett/treedd/issues/1
+[#2]: https://github.com/langston-barrett/treedd/issues/2
+[#3]: https://github.com/langston-barrett/treedd/issues/3

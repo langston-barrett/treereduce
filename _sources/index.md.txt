@@ -5,19 +5,23 @@ on delta debugging and tree-sitter grammars. In other words, `treedd` helps you
 shrink programs while maintaining some property of interest, for example, that
 the program causes a compiler crash or outputs a certain message.
 
+See the {doc}`overview` for more information, or get started right away with
+{doc}`install` and {doc}`usage`.
+
 Source available [on Github][src].
 
-`treedd` currently supports the following languages:
-
-- C
+```{warning}
+`treedd` is **alpha-quality** software. Some parts of the documentation are
+currently aspirational---these are marked with TODOs and linked issues.
+```
 
 ```{toctree}
 :caption: User Guide
 
 changelog
-comparison
 contributing
 install
+overview
 usage
 ```
 

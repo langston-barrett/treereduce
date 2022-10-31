@@ -6,6 +6,10 @@ Statically-linked Linux binaries are available on the [releases page][releases].
 
 ## From crates.io
 
+```{warning}
+TODO([#11][#11])
+```
+
 You can build a released version from [crates.io][crates-io]. You'll need the
 Rust compiler and the [Cargo][cargo] build tool. [rustup][rustup] makes it very
 easy to obtain these. Then, to install the reducer for the language `<LANG>`,
@@ -21,6 +25,7 @@ This will install binaries in `~/.cargo.bin` by default.
 
 You can also {doc}`build from source <build>`.
 
+[#11]: https://github.com/langston-barrett/treedd/issues/11
 [cargo]: https://doc.rust-lang.org/cargo/
 [crates-io]: https://crates.io/
 [releases]: https://github.com/langston-barrett/treedd/releases

@@ -1,5 +1,5 @@
 # Usage
 
-TODO(lb)!
+TODO([#14][#14])
 
-Discuss interestingness tests.
+[#14]: https://github.com/langston-barrett/treedd/issues/14
