@@ -3,6 +3,7 @@ use tree_sitter::Node;
 
 use crate::id::NodeId;
 
+#[derive(Debug)]
 pub struct Alter {
     omit: HashSet<NodeId>,
 }
@@ -14,8 +15,9 @@ impl Alter {
         }
     }
 
-    pub fn omit(&mut self, node: &Node) -> bool {
-        self.omit.insert(NodeId::new(node))
+    pub fn omit(mut self, node: &Node) -> Self {
+        self.omit.insert(NodeId::new(node));
+        self
     }
 
     pub fn should_omit(&self, node: &Node) -> bool {

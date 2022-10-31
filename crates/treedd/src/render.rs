@@ -36,18 +36,19 @@ fn render_with_children(
     node: &Node,
     source: &[u8],
     alter: &Alter,
-) -> Result<(), io::Error> {
+) -> Result<bool, io::Error> {
     debug_assert!(node.child_count() != 0);
     let first = node.child(0).unwrap();
     debug_assert!(first.start_byte() > node.start_byte());
     w.write_all(node_bytes_until(node, source, first.start_byte()))?;
     let mut last = node.end_byte();
+    let mut altered = false;
     for child in node.children(&mut tree.walk()) {
         last = child.end_byte();
-        render_node(w, tree, &child, source, alter)?;
+        altered |= render_node(w, tree, &child, source, alter)?;
     }
     w.write_all(node_bytes_from(node, source, last))?;
-    Ok(())
+    Ok(altered)
 }
 
 fn render_node(
@@ -56,15 +57,16 @@ fn render_node(
     node: &Node,
     source: &[u8],
     alter: &Alter,
-) -> Result<(), io::Error> {
+) -> Result<bool, io::Error> {
+    eprintln!("Rendering {} {}", node.id(), node.kind());
     if !has_alter(tree, node, alter) {
         w.write_all(node_bytes(node, source))?;
+        Ok(false)
     } else if alter.should_omit(node) {
-        return Ok(());
+        Ok(true)
     } else {
-        render_with_children(w, tree, node, source, alter)?;
+        render_with_children(w, tree, node, source, alter)
     }
-    Ok(())
 }
 
 pub fn render(
@@ -72,15 +74,15 @@ pub fn render(
     tree: &Tree,
     source: &[u8],
     alter: &Alter,
-) -> Result<(), io::Error> {
+) -> Result<bool, io::Error> {
     render_node(w, tree, &tree.root_node(), source, alter)
 }
 
-pub fn show(w: &mut impl Write, tree: &Tree, source: &[u8]) -> Result<(), io::Error> {
+pub fn show(w: &mut impl Write, tree: &Tree, source: &[u8]) -> Result<bool, io::Error> {
     render(w, tree, source, &Alter::new())
 }
 
-pub fn show_stdout(tree: &Tree, source: &[u8]) -> Result<(), io::Error> {
+pub fn show_stdout(tree: &Tree, source: &[u8]) -> Result<bool, io::Error> {
     // https://nnethercote.github.io/perf-book/io.html#locking
     let stdout = std::io::stdout();
     let mut lock = stdout.lock();
@@ -127,8 +129,7 @@ mod tests {
     fn parse_then_render_main_omit() {
         let src = r#"int main(int argc, char *argv[]) { return 0; }"#;
         let tree = parse(src);
-        let mut alter = Alter::new();
-        alter.omit(&tree.root_node());
+        let alter = Alter::new().omit(&tree.root_node());
         let r = do_render(&tree, src, &alter);
         assert!("".as_bytes() == r)
     }

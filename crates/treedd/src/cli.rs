@@ -134,8 +134,8 @@ pub fn main(language: tree_sitter::Language) -> Result<()> {
         std::process::exit(1);
     }
 
-    let tree2 = crate::dd::treedd(tree, &chk)?;
+    let gen_tree = crate::dd::treedd(tree, src.as_bytes().to_vec(), &chk)?;
     // TODO(#4): Default to outputting to treedd.out
-    crate::render::show_stdout(&tree2, src.as_bytes())?;
+    crate::render::show_stdout(&gen_tree.tree, &gen_tree.source)?;
     Ok(())
 }
