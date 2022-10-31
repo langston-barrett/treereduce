@@ -76,6 +76,17 @@ pub fn render(
     render_node(w, tree, &tree.root_node(), source, alter)
 }
 
+pub fn show(w: &mut impl Write, tree: &Tree, source: &[u8]) -> Result<(), io::Error> {
+    render(w, tree, source, &Alter::new())
+}
+
+pub fn show_stdout(tree: &Tree, source: &[u8]) -> Result<(), io::Error> {
+    // https://nnethercote.github.io/perf-book/io.html#locking
+    let stdout = std::io::stdout();
+    let mut lock = stdout.lock();
+    crate::render::render(&mut lock, tree, source, &Alter::new())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

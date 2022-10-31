@@ -7,6 +7,8 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use tree_sitter::Tree;
 
+use crate::check::Check;
+
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum OnParseError {
     Ignore,
@@ -58,9 +60,17 @@ pub struct Args {
     #[arg(long, default_value_t = OnParseError::Warn, value_name = "CHOICE")]
     on_parse_error: OnParseError,
 
+    /// Exit code to consider interesting
+    #[arg(long, default_values_t = vec![0], value_name = "EXIT_CODE")]
+    interesting_exit_code: Vec<i32>,
+
     /// Source code to consume; if empty, parse from stdin
     #[arg(short, long, default_value = None, value_name = "SRC_FILE")]
     pub source: Option<String>,
+
+    /// Interestingness check
+    #[arg(value_name = "CMD")]
+    pub check: String,
 }
 
 fn read_file(file: &str) -> Result<String> {
@@ -81,8 +91,24 @@ fn stdin_string() -> Result<String> {
     Ok(stdin_str)
 }
 
+fn check(args: &Args) -> Check {
+    let mut argv: Vec<_> = args.check.split_whitespace().collect();
+    match argv.pop() {
+        None => {
+            eprintln!("Empty check!");
+            std::process::exit(1);
+        }
+        Some(cmd) => Check::new(
+            cmd.to_string(),
+            argv.iter().map(|s| s.to_string()).collect(),
+            args.interesting_exit_code.clone(),
+        ),
+    }
+}
+
 pub fn main(language: tree_sitter::Language) -> Result<()> {
     let args = Args::parse();
+    let chk = check(&args);
     let (path, src) = if let Some(path) = args.source {
         (path.to_string(), read_file(&path)?)
     } else {
@@ -90,14 +116,23 @@ pub fn main(language: tree_sitter::Language) -> Result<()> {
     };
     let tree = parse(language, &src)?;
     handle_parse_errors(&path, &tree, &args.on_parse_error);
-    // https://nnethercote.github.io/perf-book/io.html#locking
-    let stdout = std::io::stdout();
-    let mut lock = stdout.lock();
+
+    let mut test: Vec<u8> = Vec::new(); // TODO(lb): reserve
     crate::render::render(
-        &mut lock,
+        &mut test,
         &tree,
         src.as_bytes(),
         &crate::alter::Alter::new(),
     )?;
+    if !chk
+        .interesting(&test)
+        .context("Failed to check that initial input was interesting")?
+    {
+        eprintln!("Initial test was not interesting. See the usage documentation for help: https://langston-barrett.github.io/treedd/usage.html");
+        std::process::exit(1);
+    }
+
+    let tree2 = crate::dd::treedd(tree, &chk)?;
+    crate::render::show_stdout(&tree2, src.as_bytes())?;
     Ok(())
 }

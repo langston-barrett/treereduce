@@ -1,5 +1,7 @@
 pub mod alter;
-pub mod id;
+pub mod check;
+pub mod dd;
+mod id;
 pub mod render;
 
 #[cfg(feature = "cli")]
