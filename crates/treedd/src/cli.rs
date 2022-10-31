@@ -51,10 +51,12 @@ fn handle_parse_errors(path: &str, tree: &Tree, on_parse_error: &OnParseError) {
 /// Minimize a program
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-// TODO(lb): Output file
+// TODO(#5): --output flag
 // #[arg(short, long, default_value = None)]
 // pub output: Option<String>,
-// TODO(lb): Interestingness test
+// TODO(#6): stdout/stderr regex
+// TODO(#7): --jobs flag
+// TODO(#8): --verbosity flag
 pub struct Args {
     /// Behavior on parse errors
     #[arg(long, default_value_t = OnParseError::Warn, value_name = "CHOICE")]
@@ -133,6 +135,7 @@ pub fn main(language: tree_sitter::Language) -> Result<()> {
     }
 
     let tree2 = crate::dd::treedd(tree, &chk)?;
+    // TODO(#4): Default to outputting to treedd.out
     crate::render::show_stdout(&tree2, src.as_bytes())?;
     Ok(())
 }

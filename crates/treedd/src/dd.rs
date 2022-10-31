@@ -4,12 +4,12 @@ use tree_sitter::{Node, Tree};
 // use crate::alter::Alter;
 use crate::check::Check;
 
-// TODO(lb): Refine with access to node-types.json
+// TODO(#15): Refine with access to node-types.json
 fn is_list(_node: &Node) -> bool {
     false
 }
 
-// TODO(lb): Refine with access to node-types.json
+// TODO(#15): Refine with access to node-types.json
 fn is_optional(_node: &Node) -> bool {
     true
 }

@@ -6,7 +6,7 @@ pub struct Check {
     cmd: String,
     args: Vec<String>,
     exit_codes: Vec<i32>,
-    // TODO(lb): stdout/stderr regex
+    // TODO(#6): stdout/stderr regex
 }
 
 impl Check {
