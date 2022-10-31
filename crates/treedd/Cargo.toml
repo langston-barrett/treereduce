@@ -10,5 +10,14 @@ readme = "README.md"
 homepage = "https://github.com/langston-barrett/treedd"
 repository = "https://github.com/langston-barrett/treedd"
 
+[dev-dependencies]
+tree-sitter-c = "0.20"
+
 [dependencies]
+anyhow = { version = "1", optional = true }
+clap = { version = "4", features = ["derive"], optional = true }
 tree-sitter = "0.20"
+
+[features]
+default = []
+cli = ["dep:anyhow", "dep:clap"]

@@ -2,7 +2,6 @@ CARGO = cargo
 
 CARGO_FLAGS =
 
-DL = $(shell ls ./**/*.dl)
 RS = $(shell ls ./**/*.rs)
 TOML = $(shell ls ./**/*.toml)
 
@@ -28,7 +27,7 @@ doc:
 
 .PHONY: entr
 entr:
-	ls Makefile $(DL) $(RS) $(TOML) | \
+	ls Makefile $(RS) $(TOML) | \
 	  entr -c -s "make -j fmt check lint && make build && make test"
 
 .PHONY: fmt

@@ -11,9 +11,6 @@ homepage = "https://github.com/langston-barrett/treedd"
 repository = "https://github.com/langston-barrett/treedd"
 
 [dependencies]
-# anyhow = "1.0"
-# clap = { version = "4.0", features = ["derive"] }
-# rayon = "1.5"
-treedd = { version = "0.0.0", path = "../treedd" }
-tree-sitter = "0.20"
+anyhow = "1.0"
+treedd = { version = "0.0.0", path = "../treedd", features = ["cli"] }
 tree-sitter-c = "0.20"
