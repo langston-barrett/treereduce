@@ -249,38 +249,12 @@ title="Print to PDF"
     </ul>
   </div>
 </div>
-<label for="__page-toc"
-  class="headerbtn headerbtn-page-toc"
-  
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-list"></i>
-  </span>
-
-</label>
 
     </div>
 </div>
 
 <!-- Table of contents -->
 <div class="col-md-3 bd-toc show noprint">
-    <div class="tocsection onthispage pt-5 pb-3">
-        <i class="fas fa-list"></i> Contents
-    </div>
-    <nav id="bd-toc-nav" aria-label="Page">
-        <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#future-work">
-   Future Work
-  </a>
-  <ul class="nav section-nav flex-column">
-  </ul>
- </li>
-</ul>
-
-    </nav>
 </div>
     </div>
     <div class="article row">
@@ -292,21 +266,6 @@ title="Print to PDF"
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
-                        <div>
-                            <h2> Contents </h2>
-                        </div>
-                        <nav aria-label="Page">
-                            <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#future-work">
-   Future Work
-  </a>
-  <ul class="nav section-nav flex-column">
-  </ul>
- </li>
-</ul>
-
-                        </nav>
                     </div>
                 </div>
             </div>
@@ -317,15 +276,13 @@ title="Print to PDF"
   <div class="section" id="treedd">
 <h1>treedd<a class="headerlink" href="#treedd" title="Permalink to this headline">#</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> is a fast, parallel, syntax-aware, multi-language program reducer based
-on recursive hierarchical delta debugging with hoisting and tree-sitter
-grammars. In other words, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> helps you shrink programs while maintaining
-some property of interest, for example, that the program causes a compiler crash
-or outputs a certain message.</p>
+on delta debugging and tree-sitter grammars. In other words, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> helps you
+shrink programs while maintaining some property of interest, for example, that
+the program causes a compiler crash or outputs a certain message.</p>
 <p>Source available <a class="reference external" href="https://github.com/langston-barrett/treeddb">on Github</a>.</p>
-<div class="section" id="future-work">
-<h2>Future Work<a class="headerlink" href="#future-work" title="Permalink to this headline">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> currently supports the following languages:</p>
 <ul class="simple">
-<li><p>Awareness of binding structure</p></li>
+<li><p>C</p></li>
 </ul>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
@@ -364,7 +321,6 @@ or outputs a certain message.</p>
 </ul>
 </li>
 </ul>
-</div>
 </div>
 </div>
 

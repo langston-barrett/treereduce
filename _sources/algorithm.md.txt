@@ -1,7 +1,9 @@
 # Algorithm
 
 `treedd` brings together many improvements to the delta-debugging algorithm for
-tree-structured inputs from the academic literature.
+tree-structured inputs from the academic literature. Following the naming
+schemes in the literature, we might call its algorithm "recursive hierarchical
+delta debugging with hoisting".
 
 See: HDDr Figure 5.
 
@@ -26,6 +28,10 @@ def interesting_replacement(tree, node, variant):
     return interesting(tree.replace(node, variant).render())
 
 def minimize(tree, node):
+    if node.is_optional():
+        deleted = try_delete(tree, node)
+        if new != None:
+            return deleted
     if node.is_list():
         return pddmin2(tree, node)
     return hoist(tree, node)

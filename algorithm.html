@@ -314,7 +314,9 @@ title="Print to PDF"
   <div class="section" id="algorithm">
 <h1>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">#</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> brings together many improvements to the delta-debugging algorithm for
-tree-structured inputs from the academic literature.</p>
+tree-structured inputs from the academic literature. Following the naming
+schemes in the literature, we might call its algorithm “recursive hierarchical
+delta debugging with hoisting”.</p>
 <p>See: HDDr Figure 5.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">treedd</span><span class="p">():</span>
     <span class="n">tree</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="n">source_code</span><span class="p">)</span>
@@ -336,6 +338,10 @@ tree-structured inputs from the academic literature.</p>
     <span class="k">return</span> <span class="n">interesting</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
 
 <span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_optional</span><span class="p">():</span>
+        <span class="n">deleted</span> <span class="o">=</span> <span class="n">try_delete</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">deleted</span>
     <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_list</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">pddmin2</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">hoist</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
