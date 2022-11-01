@@ -1,23 +1,38 @@
-// use std::collections::hash_map::DefaultHasher;
-// use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::io;
 use std::sync::{Arc, RwLock};
 use tree_sitter::{Language, Node, Tree};
 
 use crate::alter::Alter;
 use crate::check::Check;
+use crate::id::NodeId;
 
-// struct NodeHash {
-//     hash: u64,
+#[derive(PartialEq, Eq, Hash)]
+struct NodeHash {
+    hash: u64,
+}
+
+impl NodeHash {
+    fn new(node: &Node, source: &[u8]) -> Self {
+        let mut s = DefaultHasher::new();
+        node.utf8_text(source).unwrap().hash(&mut s); // TODO(lb): no unwrap
+        NodeHash { hash: s.finish() }
+    }
+}
+
+// fn find_node<'a>(tree: &'a Tree, source: &[u8], node: &'a Node, hash: &'a NodeHash) -> Option<Node> {
+//     if NodeHash::new(node, ())
 // }
 
-// impl NodeHash {
-//     fn new(node: &Node, source: &[u8]) -> Self {
-//         let mut s = DefaultHasher::new();
-//         node.utf8_text(source).unwrap().hash(&mut s); // TODO(lb): no unwrap
-//         NodeHash { hash: s.finish() }
-//     }
+// TODO(lb)!
+// fn find<'a>(_tree: &'a Tree, _source: &[u8], _hash: &'a NodeHash) -> Option<Node<'a>> {
+//     unimplemented!()
 // }
+
+fn find<'a>(_tree: &'a Tree, _hash: &'a NodeHash) -> Option<Node<'a>> {
+    unimplemented!()
+}
 
 enum InterestingCheck {
     Yes,
@@ -124,22 +139,29 @@ fn _is_optional(_node: &Node) -> bool {
     true
 }
 
-fn try_delete<'a>(ctx: &'a Ctx, node: Node<'a>) -> io::Result<Vec<Node<'a>>> {
-    match ctx.interesting(&Alter::new().omit(&node))? {
+fn try_delete(ctx: &Ctx, node_id: NodeId, node_hash: NodeHash) -> io::Result<Vec<NodeHash>> {
+    match ctx.interesting(&Alter::new().omit_id(node_id))? {
         // This tree was deleted, no need to recurse on children
         InterestingCheck::Yes => {
-            eprintln!("Interesting deletion of {}", node.kind());
+            // eprintln!("Interesting deletion of {}", node.kind());
             // let mut r = ctx.lock.write().unwrap();
             // eprintln!("New tree: {}", node.kind());
             Ok(Vec::new())
         }
-        InterestingCheck::TryAgain => Ok(vec![node]),
+        InterestingCheck::TryAgain => Ok(vec![node_hash]),
         InterestingCheck::No => {
-            // can't use node.children() because it requires borrowing in the
-            // lock
+            // TODO(lb): maybe use node.children() with walk()
+            let r = ctx.lock.read().unwrap();
+            let node = match find(&r.tree, &node_hash) {
+                Some(n) => n,
+                None => return Ok(Vec::new()),
+            };
             let mut v = Vec::new();
             for i in 0..node.child_count() {
-                v.push(node.child(i).expect("Counting error!"));
+                v.push(NodeHash::new(
+                    &node.child(i).expect("Counting error!"),
+                    &r.source,
+                ));
             }
             Ok(v)
         }
@@ -151,14 +173,17 @@ fn try_delete<'a>(ctx: &'a Ctx, node: Node<'a>) -> io::Result<Vec<Node<'a>>> {
     // }
 }
 
-fn _ddmin<'a>(_ctx: &'a Ctx, _node: Node<'a>) -> Vec<Node<'a>> {
-    Vec::new()
-}
-
-fn minimize<'a>(ctx: &'a Ctx, node: Node<'a>) -> io::Result<Vec<Node<'a>>> {
-    eprintln!("Minimizing {} {}", node.id(), node.kind());
+fn minimize(ctx: &Ctx, node_hash: NodeHash) -> io::Result<Vec<NodeHash>> {
+    let (id, hash) = {
+        let r = ctx.lock.read().unwrap();
+        let node = match find(&r.tree, &node_hash) {
+            Some(n) => n,
+            None => return Ok(Vec::new()),
+        };
+        (NodeId::new(&node), NodeHash::new(&node, &r.source))
+    };
     // if is_optional(&node) {
-    try_delete(ctx, node)
+    try_delete(ctx, id, hash)
     // }
     // if is_list(&node) {
     //     ddmin(ctx, node);
@@ -168,15 +193,15 @@ fn minimize<'a>(ctx: &'a Ctx, node: Node<'a>) -> io::Result<Vec<Node<'a>>> {
 
 pub fn treedd(tree: Tree, source: Vec<u8>, check: &Check) -> io::Result<GenTree> {
     // TODO(lb): Queue needs to consist of node IDs - hashes of node text
-    let mut queue: Vec<Node> = Vec::new();
+    let mut queue: Vec<NodeHash> = vec![NodeHash::new(&tree.root_node(), &source)];
     let lock = Arc::new(RwLock::new(GenTree::new(tree, source)));
     let ctx = Ctx { lock, check };
     while !queue.is_empty() {
-        // TODO(lb): parallel
         let mut new_queue = Vec::new();
         new_queue.reserve(queue.len());
-        for node in queue.into_iter() {
-            new_queue.extend(minimize(&ctx, node)?)
+        // TODO(lb): parallel
+        for hash in queue.into_iter() {
+            new_queue.extend(minimize(&ctx, hash)?)
         }
         queue = new_queue;
     }

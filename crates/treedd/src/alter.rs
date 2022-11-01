@@ -20,6 +20,11 @@ impl Alter {
         self
     }
 
+    pub fn omit_id(mut self, node_id: NodeId) -> Self {
+        self.omit.insert(node_id);
+        self
+    }
+
     pub fn should_omit(&self, node: &Node) -> bool {
         self.omit.contains(&NodeId::new(node))
     }
