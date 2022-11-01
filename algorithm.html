@@ -273,6 +273,31 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#goals">
+   Goals
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#assumptions">
+   Assumptions
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#high-level-design">
+   High-Level Design
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#reduction-strategies">
+   Reduction Strategies
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#pseudocode">
+   Pseudocode
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#bibliography">
    Bibliography
   </a>
@@ -297,6 +322,31 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#goals">
+   Goals
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#assumptions">
+   Assumptions
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#high-level-design">
+   High-Level Design
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#reduction-strategies">
+   Reduction Strategies
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#pseudocode">
+   Pseudocode
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#bibliography">
    Bibliography
   </a>
@@ -313,67 +363,125 @@ title="Print to PDF"
                 
   <div class="section" id="algorithm">
 <h1>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">#</a></h1>
+<div class="section" id="goals">
+<span id="algorithm-goals"></span><h2>Goals<a class="headerlink" href="#goals" title="Permalink to this headline">#</a></h2>
+<p>The core reduction algorithm has three goals:</p>
+<ol class="arabic simple">
+<li><p>Go fast</p></li>
+<li><p>Produce small test cases</p></li>
+<li><p>Produce readable test cases</p></li>
+</ol>
+<p>Unlike more theoretical work in this space, the algorithm does <em>not</em> attempt to
+minimize the number of “oracle queries”, that is, invocations of the
+user-provided “interestingness test”.</p>
+</div>
+<div class="section" id="assumptions">
+<span id="algorithm-assumptions"></span><h2>Assumptions<a class="headerlink" href="#assumptions" title="Permalink to this headline">#</a></h2>
+<p>These assumptions strongly inform the algorithm design:</p>
+<ol class="arabic simple">
+<li><p>The interestingness will be comparatively slow—it will generally involve
+spinning up a new process, disk I/O, parsing, type-checking, etc.</p></li>
+<li><p>Smaller inputs lead to faster interestingness tests.</p></li>
+</ol>
+<p>These assumptions hold for the use-case of reducing programs that cause compiler
+crashes.</p>
+</div>
+<div class="section" id="high-level-design">
+<h2>High-Level Design<a class="headerlink" href="#high-level-design" title="Permalink to this headline">#</a></h2>
+<p>Due to <a class="reference internal" href="#algorithm-assumptions"><span class="std std-ref">Assumption (1)</span></a>, it’s essential that <code class="docutils literal notranslate"><span class="pre">treedd</span></code>
+execute several interestingness tests in parallel. Luckily, for the same reason,
+lock contention is unlikely to be a major issue—so long as executing the
+interestingness test doesn’t require holding a lock, most threads will spend the
+majority of their time executing the interestingness test, rather than waiting
+for locks on shared data.</p>
+<p>The recent paper “<a class="reference external" href="https://github.com/golnazgh/PARDIS">PARDIS</a> : Priority Aware Test Case Reduction”
+highlights the importance of <em>prioritization</em> of reductions. Greedy removal of
+the <em>largest</em> subtrees leads to greatly increased performance due to faster
+interestingness tests (<a class="reference internal" href="#algorithm-assumptions"><span class="std std-ref">Assumption (2)</span></a>).</p>
+<p>With these ideas in mind, the overall algorithm design involves spinning up some
+number of threads, which share two pieces of mutable (locked) data: the target
+program being minimized, and a prioritized max-heap of reductions to attempt.
+Each thread executes the following loop:</p>
+<ul class="simple">
+<li><p>Pop a reduction task off the heap</p></li>
+<li><p>Execute the interestingness test with the reduced program</p></li>
+<li><p>If the reduced program was still interesting, try replacing the global target:</p>
+<ul>
+<li><p>If the target was replaced by another thread, try this reduction again</p></li>
+<li><p>Otherwise, replace the target with the reduced version</p></li>
+</ul>
+</li>
+<li><p>Push any new tasks onto the task queue</p></li>
+</ul>
+<p>If lock contention does become an issue, it may be beneficial for each thread to
+maintain a local prioritized heap in addition to the global one.</p>
+</div>
+<div class="section" id="reduction-strategies">
+<h2>Reduction Strategies<a class="headerlink" href="#reduction-strategies" title="Permalink to this headline">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> uses several strategies during program minimization:</p>
 <ul class="simple">
-<li><p><em>Deletion</em> (<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/1">#1</a>): When a child is optional, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> attempts to delete
-it. For example, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> might delete the <code class="docutils literal notranslate"><span class="pre">const</span></code> in <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">int</span> <span class="pre">x;</span></code>.</p></li>
-<li><p><em>Delta debugging</em> (<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/2">#2</a>): When a node has a list of children, <code class="docutils literal notranslate"><span class="pre">treedd</span></code>
-uses <em>delta debugging</em> to delete as many as possible in an efficient way.</p></li>
-<li><p><em>Hoisting</em> (<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/3">#3</a>): Nodes with a recursive structure may be replaced by
-their descendants, e.g. replacing <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">+</span> <span class="pre">(3</span> <span class="pre">*</span> <span class="pre">y)</span></code> with just <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p></li>
+<li><p><em>Deletion</em> (TODO(<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/1">#1</a>)): When a child is optional, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> attempts to
+delete it. For example, <code class="docutils literal notranslate"><span class="pre">treedd</span></code> might delete the <code class="docutils literal notranslate"><span class="pre">const</span></code> in <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">int</span> <span class="pre">x;</span></code>.</p></li>
+<li><p><em>Delta debugging</em> (TODO(<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/2">#2</a>)): When a node has a list of children,
+<code class="docutils literal notranslate"><span class="pre">treedd</span></code> uses <em>delta debugging</em> to delete as many as possible in an efficient
+way.</p></li>
+<li><p><em>Hoisting</em> (TODO(<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/3">#3</a>)): Nodes with a recursive structure may be replaced
+by their descendants, e.g. replacing <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">+</span> <span class="pre">(3</span> <span class="pre">*</span> <span class="pre">y)</span></code> with just <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> brings together many improvements to the delta-debugging algorithm for
-tree-structured inputs from the academic literature. Following the naming
-schemes in the literature, we might call its algorithm “recursive hierarchical
-delta debugging with hoisting”.</p>
-<p>See: HDDr Figure 5.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">treedd</span><span class="p">():</span>
+</div>
+<div class="section" id="pseudocode">
+<h2>Pseudocode<a class="headerlink" href="#pseudocode" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Tree</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_node</span><span class="p">,</span> <span class="n">new_node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tree</span><span class="p">:</span>
+        <span class="o">...</span>
+
+<span class="k">class</span> <span class="nc">Node</span><span class="p">:</span>
+    <span class="o">...</span>  <span class="c1"># defined in tree-sitter</span>
+
+<span class="n">enum</span> <span class="n">Task</span><span class="p">:</span>
+    <span class="n">Explore</span><span class="p">(</span><span class="n">Node</span><span class="p">)</span>
+    <span class="n">Delete</span><span class="p">(</span><span class="n">Node</span><span class="p">)</span>
+    <span class="n">Hoist</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="n">Node</span><span class="p">)</span>
+    <span class="n">Delta</span><span class="p">(</span><span class="n">Node</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">PrioritizedTask</span><span class="p">:</span>
+    <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">task</span><span class="p">:</span> <span class="n">Task</span>
+
+<span class="k">def</span> <span class="nf">treedd</span><span class="p">():</span>
     <span class="n">tree</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="n">source_code</span><span class="p">)</span>
-    <span class="n">queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">root_node</span><span class="p">())</span>
-    <span class="k">while</span> <span class="ow">not</span> <span class="n">queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-        <span class="n">parallel</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">queue</span><span class="p">:</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">new_node</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-                <span class="k">with</span> <span class="n">tree</span><span class="o">.</span><span class="n">lock</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tree</span><span class="p">:</span>
-                        <span class="k">break</span>
-                    <span class="k">if</span> <span class="n">interesting_replacement</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">new_node</span><span class="p">):</span>
-                        <span class="n">tree</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">new_node</span><span class="p">)</span>
-                        <span class="k">break</span>
-            <span class="n">queue</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+    <span class="n">heap</span> <span class="o">=</span> <span class="n">Heap</span><span class="p">(</span><span class="n">PrioritizedTask</span><span class="p">(</span><span class="n">Explore</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">root_node</span><span class="p">()),</span> <span class="n">priority</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">threads</span> <span class="o">=</span> <span class="n">AtomicUsize</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">idle_threads</span> <span class="o">=</span> <span class="n">AtomicUsize</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">fork</span><span class="p">(</span><span class="n">spawn</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">,</span> <span class="n">threads</span><span class="p">,</span> <span class="n">idle_threads</span><span class="p">)</span>
+
+    <span class="c1"># Wait for all threads to finish and exit:</span>
+    <span class="k">while</span> <span class="n">tree</span><span class="o">.</span><span class="n">count_references</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">tree</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">,</span> <span class="n">threads</span><span class="p">,</span> <span class="n">idle_threads</span><span class="p">):</span>
+    <span class="k">pass</span>
 
 <span class="k">def</span> <span class="nf">interesting_replacement</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">variant</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">interesting</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
-
-<span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_optional</span><span class="p">():</span>
-        <span class="n">deleted</span> <span class="o">=</span> <span class="n">try_delete</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">new</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">deleted</span>
-    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_list</span><span class="p">():</span>
-        <span class="k">return</span> <span class="n">pddmin2</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">hoist</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">pddmin2</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">width</span><span class="p">():</span>
-        <span class="k">return</span> <span class="n">node</span>
-
-    <span class="n">interesting_variant</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="c1"># TODO(lb): sort</span>
-    <span class="n">variants</span> <span class="o">=</span> <span class="p">{</span><span class="n">deltas</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="n">nablas</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="mf">2.</span><span class="o">..</span><span class="p">}</span>
-    <span class="n">parallel</span> <span class="k">for</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">interesting</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">()):</span>
-            <span class="n">interesting_variant</span> <span class="o">=</span> <span class="n">variant</span>
-            <span class="n">parallel</span> <span class="k">return</span> <span class="n">variant</span>
-
-<span class="k">def</span> <span class="nf">hoist</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-    <span class="k">pass</span>
 </pre></div>
+</div>
 </div>
 <div class="section" id="bibliography">
 <h2>Bibliography<a class="headerlink" href="#bibliography" title="Permalink to this headline">#</a></h2>
+<p>TODO(#16): BibTeX</p>
 <ul class="simple">
+<li><p>Gharachorlu, G. and Sumner, N., 2019, April. : Priority Aware Test Case
+Reduction. In International Conference on Fundamental Approaches to Software
+Engineering (pp. 409-426). Springer, Cham.</p></li>
+<li><p>Sun, C., Li, Y., Zhang, Q., Gu, T. and Su, Z., 2018, May. Perses:
+Syntax-guided program reduction. In Proceedings of the 40th International
+Conference on Software Engineering (pp. 361-371).</p></li>
 <li><p>Hodován, R. and Kiss, Á., 2016, July. Practical Improvements to the Minimizing
 Delta Debugging Algorithm. In ICSOFT-EA (pp. 241-248).</p></li>
 <li><p>Hodován, R. and Kiss, Á., 2016, November. Modernizing hierarchical delta
@@ -386,13 +494,6 @@ Conference on Automation of Software Test (AST) (pp. 60-69). IEEE.</p></li>
 variant of the hierarchical delta debugging algorithm. In Proceedings of the
 9th ACM SIGSOFT International Workshop on Automating TEST Case Design,
 Selection, and Evaluation (pp. 16-22).</p></li>
-</ul>
-<p>To read:</p>
-<ul class="simple">
-<li><p>Groce, A., Alipour, M.A., Zhang, C., Chen, Y. and Regehr, J., 2016. Cause
-reduction: delta debugging, even without bugs. Software Testing, Verification
-and Reliability, 26(1), pp.40-68.</p></li>
-<li><p>Test Case Reduction: A Framework, Benchmark, and Comparative Study</p></li>
 <li><p>Hodován, R., Kiss, Á. and Gyimóthy, T., 2017, September. Coarse hierarchical
 delta debugging. In 2017 IEEE international conference on software maintenance
 and evolution (ICSME) (pp. 194-203). IEEE.</p></li>
