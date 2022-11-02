@@ -40,24 +40,31 @@ the *largest* subtrees leads to greatly increased performance due to faster
 interestingness tests ([Assumption (2)](algorithm-assumptions)).
 
 With these ideas in mind, the overall algorithm design involves spinning up some
-number of threads, which share two pieces of mutable (locked) data: the target
-program being minimized, and a prioritized max-heap of reductions to attempt.
-Each thread executes the following loop:
+number of threads, which share three pieces of data:
 
-- Pop a reduction task off the heap
-- Execute the interestingness test with the reduced program
-- If the reduced program was still interesting, try replacing the global target:
+1. The original text and syntax tree of the target (read-only)
+2. A prioritized max-heap of [*reduction tasks*](reduction-strategies)
+   (read-write)
+3. A set of *edits* to the syntax tree (read-write)
 
-  * If the target was replaced by another thread, try this reduction again
-  * Otherwise, replace the target with the reduced version
+where an edit is either the deletion of a subtree, or a replacement of one
+subtree by another. Each thread executes the following loop:
 
-- Push any new tasks onto the task queue
+1. Pop a reduction task off the heap.
+2. Create a local copy of the edits. Add edits according to the current task.
+3. Execute the interestingness test on the reduced program, i.e., the target
+   as altered by the local set of edits.
+4. If the reduced program was still interesting, try replacing the global edits.
+   If the global edits were changed by another thread, try this task again with
+   the new edits, that is, go to (2).
+5. Push any new tasks onto the task queue.
+6. Go to (1).
 
 If lock contention does become an issue, it may be beneficial for each thread to
-maintain a local prioritized heap in addition to the global one, or even to
-reduce a local copy of the tree multiple times before attempting to replace the
-global copy.
+maintain a local task heap in addition to the global one, or even to attempt
+multiple tasks before replacing the global edits.
 
+(reduction-strategies)=
 ## Reduction Strategies
 
 `treedd` uses several strategies during program minimization:
@@ -74,11 +81,10 @@ global copy.
 
 A few notes:
 
-- Because the tree may be replaced by any thread at any time, tasks store *node
-  IDs*, rather than nodes themselves, and have to check if those nodes are still
-  in the current tree when executing a task.
 - In practice, `weight` is simply the number of bytes in the source text of the
   node.
+
+TODO(lb): This is not current/complete.
 
 ```python
 class NodeId:
@@ -119,11 +125,25 @@ class PrioritizedTask:
     task: Task
     priority: int
 
+class Target:
+    tree: Tree
+    text: Text
+
+class Ctx:
+    target: Target
+    heap: RwLock[Heap]
+    edits: RwLock[Edits]
+    # TODO(lb): Condition variables?
+    threads: AtomicUsize
+    idle_threads: AtomicUsize
+
 def treedd(source_code: str) -> str:
     tree = parse(source_code)
+    target = Target(tree, source_code)
+    ctx = Ctx(target, RwLock(Heap()), Edits())
     root = tree.root_node()
-    heap = Heap()
-    heap.push(PrioritizedTask(Explore(NodeId(root)), priority=weight(root)))
+    task = Explore(NodeId(root))
+    ctx.heap.push(PrioritizedTask(task, priority=weight(root)))
     threads = AtomicUsize(0)
     idle_threads = AtomicUsize(0)
     fork(spawn, tree, heap, threads, idle_threads)
@@ -175,26 +195,17 @@ def dispatch(tree: Tree, heap: Heap, task: Task) -> None:
             assert False, "Unimplemented" # TODO(lb)
 
 def explore(tree: Tree, heap: Heap, node_id: NodeId) -> None:
-    with tree.read_lock():
-        node = tree.find(node_id)
-        with heap.lock():
-            if node.is_optional():
-                heap.push(PrioritizedTask(Delete(node, priority=weight(node))))
-            else:
-                for child in node.children():
-                    heap.push(PrioritizedTask(Explore(child, priority=weight(child))))
-            # TODO(lb): Other tasks
+    node = tree.find(node_id)
+    with heap.lock():
+        if node.is_optional():
+            heap.push(PrioritizedTask(Delete(node, priority=weight(node))))
+        else:
+            for child in node.children():
+                heap.push(PrioritizedTask(Explore(child, priority=weight(child))))
+        # TODO(lb): Other tasks
 
 def delete(tree: Tree, heap: Heap, node_id: NodeId) -> None:
-    with tree.read_lock():
-        node = tree.find(node_id)
-        with heap.lock():
-            if node.is_optional():
-                heap.push(PrioritizedTask(Delete(node, priority=weight(node))))
-            else:
-                for child in node.children():
-                    heap.push(PrioritizedTask(Explore(child, priority=weight(child))))
-            # TODO(lb): Other tasks
+    pass
 
 # -----------------------------------------------------------
 # Helpers
