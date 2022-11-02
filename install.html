@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Installation &#8212; treedd  documentation</title>
+    <title>Installation &#8212; treereduce  documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -32,7 +32,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Overview" href="overview.html" />
+    <link rel="next" title="Usage" href="usage.html" />
     <link rel="prev" title="Contributing" href="contributing.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -72,7 +72,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">treedd  documentation</h1>
+      <h1 class="site-logo" id="site-title">treereduce  documentation</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -87,11 +87,6 @@
 </p>
 <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="changelog.html">
-   Changelog
-  </a>
- </li>
- <li class="toctree-l1">
   <a class="reference internal" href="contributing.html">
    Contributing
   </a>
@@ -99,11 +94,6 @@
  <li class="toctree-l1 current active">
   <a class="current reference internal" href="#">
    Installation
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="overview.html">
-   Overview
   </a>
  </li>
  <li class="toctree-l1">
@@ -119,8 +109,23 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="algorithm.html">
-   Algorithm
+  <a class="reference internal" href="benchmarks.html">
+   Benchmarks
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="changelog.html">
+   Changelog
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="design.html">
+   Design
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="overview.html">
+   Overview
   </a>
  </li>
 </ul>
@@ -335,19 +340,19 @@ title="Print to PDF"
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
 <div class="section" id="from-a-release">
 <h2>From a Release<a class="headerlink" href="#from-a-release" title="Permalink to this headline">#</a></h2>
-<p>Statically-linked Linux binaries are available on the <a class="reference external" href="https://github.com/langston-barrett/treedd/releases">releases page</a>.</p>
+<p>Statically-linked Linux binaries are available on the <a class="reference external" href="https://github.com/langston-barrett/treereduce/releases">releases page</a>.</p>
 </div>
 <div class="section" id="from-crates-io">
 <h2>From crates.io<a class="headerlink" href="#from-crates-io" title="Permalink to this headline">#</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>TODO(<a class="reference external" href="https://github.com/langston-barrett/treedd/issues/11">#11</a>)</p>
+<p>TODO(<a class="reference external" href="https://github.com/langston-barrett/treereduce/issues/11">#11</a>)</p>
 </div>
 <p>You can build a released version from <a class="reference external" href="https://crates.io/">crates.io</a>. You’ll need the
 Rust compiler and the <a class="reference external" href="https://doc.rust-lang.org/cargo/">Cargo</a> build tool. <a class="reference external" href="https://rustup.rs/">rustup</a> makes it very
 easy to obtain these. Then, to install the reducer for the language <code class="docutils literal notranslate"><span class="pre">&lt;LANG&gt;</span></code>,
 run:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cargo</span> <span class="n">install</span> <span class="n">treedd</span><span class="o">-&lt;</span><span class="n">LANG</span><span class="o">&gt;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cargo</span> <span class="n">install</span> <span class="n">treereduce</span><span class="o">-&lt;</span><span class="n">LANG</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>This will install binaries in <code class="docutils literal notranslate"><span class="pre">~/.cargo.bin</span></code> by default.</p>
@@ -373,10 +378,10 @@ run:</p>
             <p class="prev-next-title">Contributing</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="overview.html" title="next page">
+    <a class='right-next' id="next-link" href="usage.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Overview</p>
+        <p class="prev-next-title">Usage</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

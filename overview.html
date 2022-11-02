@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Overview &#8212; treedd  documentation</title>
+    <title>Overview &#8212; treereduce  documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -32,8 +32,8 @@
     <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Usage" href="usage.html" />
-    <link rel="prev" title="Installation" href="install.html" />
+    <link rel="next" title="Build" href="build.html" />
+    <link rel="prev" title="Design" href="design.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -72,7 +72,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">treedd  documentation</h1>
+      <h1 class="site-logo" id="site-title">treereduce  documentation</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -85,12 +85,7 @@
   User Guide
  </span>
 </p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="changelog.html">
-   Changelog
-  </a>
- </li>
+<ul class="nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="contributing.html">
    Contributing
@@ -99,11 +94,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="install.html">
    Installation
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   Overview
   </a>
  </li>
  <li class="toctree-l1">
@@ -117,10 +107,25 @@
   Reference
  </span>
 </p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="algorithm.html">
-   Algorithm
+  <a class="reference internal" href="benchmarks.html">
+   Benchmarks
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="changelog.html">
+   Changelog
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="design.html">
+   Design
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Overview
   </a>
  </li>
 </ul>
@@ -278,11 +283,6 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#supported-languages">
-   Supported Languages
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#comparison-to-other-tools">
    Comparison to Other Tools
   </a>
@@ -312,11 +312,6 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#supported-languages">
-   Supported Languages
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#comparison-to-other-tools">
    Comparison to Other Tools
   </a>
@@ -335,12 +330,19 @@ title="Print to PDF"
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h1>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">#</a></h2>
-</div>
-<div class="section" id="supported-languages">
-<h2>Supported Languages<a class="headerlink" href="#supported-languages" title="Permalink to this headline">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">treedd</span></code> currently supports the following languages:</p>
 <ul class="simple">
+<li><p><strong>Fast</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> uses a <a class="reference internal" href="design.html"><span class="doc">novel algorithm</span></a> for parallelized
+reduction of tree-shaped data, based on ideas from <a class="reference internal" href="design.html#bib"><span class="std std-ref">recent research</span></a>. It is written in Rust and has been <a class="reference internal" href="benchmarks.html"><span class="doc">extensively benchmarked</span></a>.</p></li>
+<li><p><strong>Effective</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> produces <a class="reference internal" href="benchmarks.html"><span class="doc">small programs</span></a>.</p></li>
+<li><p><strong>Robust</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is based on tree-sitter grammars, which are robust to
+parse errors. This means you can reduce syntactically invalid inputs, and
+each grammar doesn’t need to be 100% perfect to work for all programs.</p></li>
+<li><p><strong>Easy to set up</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> reducers are distributed as static binaries.</p></li>
+<li><p><strong>Multi-language</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> currently supports the following languages:</p>
+<ul>
 <li><p>C</p></li>
+</ul>
+</li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -371,17 +373,17 @@ title="Print to PDF"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="install.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="design.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Installation</p>
+            <p class="prev-next-title">Design</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="usage.html" title="next page">
+    <a class='right-next' id="next-link" href="build.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Usage</p>
+        <p class="prev-next-title">Build</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
