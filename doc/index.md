@@ -18,17 +18,18 @@ currently aspirational---these are marked with TODOs and linked issues.
 ```{toctree}
 :caption: User Guide
 
-changelog
 contributing
 install
-overview
 usage
 ```
 
 ```{toctree}
 :caption: Reference
 
-algorithm
+benchmarks
+changelog
+design
+overview
 ```
 
 ```{toctree}

@@ -1,4 +1,4 @@
-# Algorithm
+# Design
 
 (algorithm-goals)=
 ## Goals
@@ -54,7 +54,9 @@ Each thread executes the following loop:
 - Push any new tasks onto the task queue
 
 If lock contention does become an issue, it may be beneficial for each thread to
-maintain a local prioritized heap in addition to the global one.
+maintain a local prioritized heap in addition to the global one, or even to
+reduce a local copy of the tree multiple times before attempting to replace the
+global copy.
 
 ## Reduction Strategies
 
@@ -70,30 +72,58 @@ maintain a local prioritized heap in addition to the global one.
 
 ## Pseudocode
 
+A few notes:
+
+- Because the tree may be replaced by any thread at any time, tasks store *node
+  IDs*, rather than nodes themselves, and have to check if those nodes are still
+  in the current tree when executing a task.
+- In practice, `weight` is simply the number of bytes in the source text of the
+  node.
+
 ```python
+class NodeId:
+    ...
+
+class Node:
+    ...  # defined in tree-sitter
+
+    def is_list(self) -> bool:
+        ...
+
+    def is_optional(self) -> bool:
+        ...
+
+class Heap:
+    ...
+
 class Tree:
+    def find(self, node_id: NodeId) -> Node:
+        ...
+
     def render(self) -> str:
         ...
 
     def replace(self, old_node, new_node) -> Tree:
         ...
 
-class Node:
-    ...  # defined in tree-sitter
+    def root_node(self) -> Node:
+        ...
 
 enum Task:
-    Explore(Node)
-    Delete(Node)
-    Hoist(Node, Node)
-    Delta(Node)
+    Explore(NodeId)
+    Delete(NodeId)
+    Hoist(NodeId, NodeId)
+    Delta(NodeId)
 
 class PrioritizedTask:
-    priority: int
     task: Task
+    priority: int
 
-def treedd():
+def treedd(source_code: str) -> str:
     tree = parse(source_code)
-    heap = Heap(PrioritizedTask(Explore(tree.root_node()), priority=0))
+    root = tree.root_node()
+    heap = Heap()
+    heap.push(PrioritizedTask(Explore(NodeId(root)), priority=weight(root)))
     threads = AtomicUsize(0)
     idle_threads = AtomicUsize(0)
     fork(spawn, tree, heap, threads, idle_threads)
@@ -102,15 +132,87 @@ def treedd():
     while tree.count_references() > 1:
         wait()
 
-    return tree.extract()
+    return tree.extract().render()
 
-def spawn(tree, heap, threads, idle_threads):
-    pass
+# -----------------------------------------------------------
+# Parallel structure of the computation
+
+def spawn(tree: Tree, heap: Heap, threads: AtomicUsize, idle_threads: AtomicUsize) -> None:
+    threads += 1
+    idle = False
+    while True:
+        if idle:
+            idle_threads -= 1
+            idle = False
+        heap.lock()
+        match heap.pop_max():
+            case None:
+                heap.unlock()
+                idle = idle_logic(idle_threads)
+            case task:
+                heap.unlock()
+                dispatch(tree, heap, task)
+
+def idle_logic(idle_threads: AtomicUSize) -> None:
+    idle_threads += 1
+    if idle_threads == NUM_THREADS:
+        exit_thread()
+    sleep()  # some kind of backoff
+    return True
+
+# -----------------------------------------------------------
+# Reduction logic
+
+def dispatch(tree: Tree, heap: Heap, task: Task) -> None:
+    match task:
+        case Explore(node_id):
+            explore(tree, heap, node_id)
+        case Delete(node_id):
+            delete(tree, heap, node_id)
+        case Hoist(node_id, node_id):
+            assert False, "Unimplemented" # TODO(lb)
+        case Delta(node_id):
+            assert False, "Unimplemented" # TODO(lb)
+
+def explore(tree: Tree, heap: Heap, node_id: NodeId) -> None:
+    with tree.read_lock():
+        node = tree.find(node_id)
+        with heap.lock():
+            if node.is_optional():
+                heap.push(PrioritizedTask(Delete(node, priority=weight(node))))
+            else:
+                for child in node.children():
+                    heap.push(PrioritizedTask(Explore(child, priority=weight(child))))
+            # TODO(lb): Other tasks
+
+def delete(tree: Tree, heap: Heap, node_id: NodeId) -> None:
+    with tree.read_lock():
+        node = tree.find(node_id)
+        with heap.lock():
+            if node.is_optional():
+                heap.push(PrioritizedTask(Delete(node, priority=weight(node))))
+            else:
+                for child in node.children():
+                    heap.push(PrioritizedTask(Explore(child, priority=weight(child))))
+            # TODO(lb): Other tasks
+
+# -----------------------------------------------------------
+# Helpers
 
 def interesting_replacement(tree, node, variant):
     return interesting(tree.replace(node, variant).render())
+
+def weight(node):
+    ...
+
+def parse(source_code: str) -> Tree:
+    ...
+
+def exit_thread():
+    ...
 ```
 
+(bib)=
 ## Bibliography
 
 TODO(#16): BibTeX
