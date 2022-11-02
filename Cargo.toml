@@ -1,8 +1,8 @@
 [workspace]
 
 members = [
-    "crates/treedd",
-    "crates/treedd-c",
+    "crates/treereduce",
+    "crates/treereduce-c",
 ]
 
 # https://nnethercote.github.io/perf-book/build-configuration.html

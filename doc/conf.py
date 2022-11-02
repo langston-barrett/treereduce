@@ -1,5 +1,5 @@
 # Configuration file for the Sphinx documentation builder.
-project = 'treedd'
+project = 'treereduce'
 copyright = '2022, Langston Barrett'
 author = 'Langston Barrett'
 extensions = ['myst_parser', 'sphinx_book_theme']

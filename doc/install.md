@@ -16,7 +16,7 @@ easy to obtain these. Then, to install the reducer for the language `<LANG>`,
 run:
 
 ```
-cargo install treedd-<LANG>
+cargo install treereduce-<LANG>
 ```
 
 This will install binaries in `~/.cargo.bin` by default.
@@ -25,8 +25,8 @@ This will install binaries in `~/.cargo.bin` by default.
 
 You can also {doc}`build from source <build>`.
 
-[#11]: https://github.com/langston-barrett/treedd/issues/11
+[#11]: https://github.com/langston-barrett/treereduce/issues/11
 [cargo]: https://doc.rust-lang.org/cargo/
 [crates-io]: https://crates.io/
-[releases]: https://github.com/langston-barrett/treedd/releases
+[releases]: https://github.com/langston-barrett/treereduce/releases
 [rustup]: https://rustup.rs/

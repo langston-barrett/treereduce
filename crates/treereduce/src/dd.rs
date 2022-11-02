@@ -191,7 +191,7 @@ fn minimize(ctx: &Ctx, node_hash: NodeHash) -> io::Result<Vec<NodeHash>> {
     // Vec::new()
 }
 
-pub fn treedd(tree: Tree, source: Vec<u8>, check: &Check) -> io::Result<GenTree> {
+pub fn treereduce(tree: Tree, source: Vec<u8>, check: &Check) -> io::Result<GenTree> {
     // TODO(lb): Queue needs to consist of node IDs - hashes of node text
     let mut queue: Vec<NodeHash> = vec![NodeHash::new(&tree.root_node(), &source)];
     let lock = Arc::new(RwLock::new(GenTree::new(tree, source)));

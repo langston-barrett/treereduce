@@ -27,7 +27,7 @@ crashes.
 
 ## High-Level Design
 
-Due to [Assumption (1)](algorithm-assumptions), it's essential that `treedd`
+Due to [Assumption (1)](algorithm-assumptions), it's essential that `treereduce`
 execute several interestingness tests in parallel. Luckily, for the same reason,
 lock contention is unlikely to be a major issue---so long as executing the
 interestingness test doesn't require holding a lock, most threads will spend the
@@ -67,12 +67,12 @@ multiple tasks before replacing the global edits.
 (reduction-strategies)=
 ## Reduction Strategies
 
-`treedd` uses several strategies during program minimization:
+`treereduce` uses several strategies during program minimization:
 
-- *Deletion* (TODO([#1][#1])): When a child is optional, `treedd` attempts to
-  delete it. For example, `treedd` might delete the `const` in `const int x;`.
+- *Deletion* (TODO([#1][#1])): When a child is optional, `treereduce` attempts to
+  delete it. For example, `treereduce` might delete the `const` in `const int x;`.
 - *Delta debugging* (TODO([#2][#2])): When a node has a list of children,
-  `treedd` uses *delta debugging* to delete as many as possible in an efficient
+  `treereduce` uses *delta debugging* to delete as many as possible in an efficient
   way.
 - *Hoisting* (TODO([#3][#3])): Nodes with a recursive structure may be replaced
   by their descendants, e.g. replacing `5 + (3 * y)` with just `y`.
@@ -137,7 +137,7 @@ class Ctx:
     threads: AtomicUsize
     idle_threads: AtomicUsize
 
-def treedd(source_code: str) -> str:
+def treereduce(source_code: str) -> str:
     tree = parse(source_code)
     target = Target(tree, source_code)
     ctx = Ctx(target, RwLock(Heap()), Edits())
@@ -250,8 +250,8 @@ TODO(#16): BibTeX
   delta debugging. In 2017 IEEE international conference on software maintenance
   and evolution (ICSME) (pp. 194-203). IEEE.
 
-[#1]: https://github.com/langston-barrett/treedd/issues/1
-[#2]: https://github.com/langston-barrett/treedd/issues/2
-[#3]: https://github.com/langston-barrett/treedd/issues/3
-[#16]: https://github.com/langston-barrett/treedd/issues/16
+[#1]: https://github.com/langston-barrett/treereduce/issues/1
+[#2]: https://github.com/langston-barrett/treereduce/issues/2
+[#3]: https://github.com/langston-barrett/treereduce/issues/3
+[#16]: https://github.com/langston-barrett/treereduce/issues/16
 [pardis]: https://github.com/golnazgh/PARDIS

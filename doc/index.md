@@ -1,9 +1,9 @@
-# treedd
+# treereduce
 
-`treedd` is a fast, parallel, syntax-aware, multi-language program reducer based
-on delta debugging and tree-sitter grammars. In other words, `treedd` helps you
-shrink programs while maintaining some property of interest, for example, that
-the program causes a compiler crash or outputs a certain message.
+`treereduce` is a fast, parallel, syntax-aware, multi-language program reducer
+based on tree-sitter grammars. In other words, `treereduce` helps you shrink
+programs while maintaining some property of interest, for example, that the
+program causes a compiler crash or outputs a certain message.
 
 See the {doc}`overview` for more information, or get started right away with
 {doc}`install` and {doc}`usage`.
@@ -11,7 +11,7 @@ See the {doc}`overview` for more information, or get started right away with
 Source available [on Github][src].
 
 ```{warning}
-`treedd` is **alpha-quality** software. Some parts of the documentation are
+`treereduce` is **alpha-quality** software. Some parts of the documentation are
 currently aspirational---these are marked with TODOs and linked issues.
 ```
 
@@ -39,4 +39,4 @@ build
 dev
 ```
 
-[src]: https://github.com/langston-barrett/treeddb
+[src]: https://github.com/langston-barrett/treereduceb

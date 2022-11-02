@@ -222,7 +222,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "treedd"
+name = "treereduce"
 version = "0.0.0"
 dependencies = [
  "anyhow",
@@ -232,12 +232,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "treedd-c"
+name = "treereduce-c"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "tree-sitter-c",
- "treedd",
+ "treereduce",
 ]
 
 [[package]]

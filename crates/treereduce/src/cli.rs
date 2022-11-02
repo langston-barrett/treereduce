@@ -130,12 +130,12 @@ pub fn main(language: tree_sitter::Language) -> Result<()> {
         .interesting(&test)
         .context("Failed to check that initial input was interesting")?
     {
-        eprintln!("Initial test was not interesting. See the usage documentation for help: https://langston-barrett.github.io/treedd/usage.html");
+        eprintln!("Initial test was not interesting. See the usage documentation for help: https://langston-barrett.github.io/treereduce/usage.html");
         std::process::exit(1);
     }
 
-    let gen_tree = crate::dd::treedd(tree, src.as_bytes().to_vec(), &chk)?;
-    // TODO(#4): Default to outputting to treedd.out
+    let gen_tree = crate::dd::treereduce(tree, src.as_bytes().to_vec(), &chk)?;
+    // TODO(#4): Default to outputting to treereduce.out
     crate::render::show_stdout(&gen_tree.tree, &gen_tree.source)?;
     Ok(())
 }

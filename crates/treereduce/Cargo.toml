@@ -1,5 +1,5 @@
 [package]
-name = "treedd"
+name = "treereduce"
 description = "Fast, syntax-aware, multi-language program reducer based on delta debugging"
 version = "0.0.0"
 keywords = ["delta-debugging", "program-reducer", "test-case-minimization"]
@@ -7,8 +7,8 @@ edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/langston-barrett/treedd"
-repository = "https://github.com/langston-barrett/treedd"
+homepage = "https://github.com/langston-barrett/treereduce"
+repository = "https://github.com/langston-barrett/treereduce"
 
 [dev-dependencies]
 tree-sitter-c = "0.20"
