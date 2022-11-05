@@ -70,7 +70,6 @@ fn subtypes(name: &str, nodes: &Vec<Node>) -> Vec<String> {
     r
 }
 
-// TODO(lb): Check if a field is a list, if so, try deleting all
 impl NodeTypes {
     pub fn new(node_types_json_str: &str) -> Result<Self, serde_json::Error> {
         let nodes: Vec<Node> = serde_json::from_str(node_types_json_str)?;
@@ -138,9 +137,7 @@ impl NodeTypes {
         }
     }
 
-    // TODO(lb): Also include fields that are multiple and not required
-    // TODO(lb): Benchmark including fields that *are* required, defaulting to
-    // the first
+    // TODO(#21): Also include fields, include multiple and not required
     pub fn list_types(&self, node: &tree_sitter::Node) -> Vec<String> {
         let mut kinds = Vec::new();
         if let Some(children) = self.children.get(node.kind()) {

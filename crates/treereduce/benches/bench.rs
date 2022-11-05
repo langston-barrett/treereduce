@@ -77,7 +77,7 @@ mod tests {
         orig: Original,
         chk: T,
     ) -> Edits {
-        treereduce(1, node_types, orig, chk).unwrap()
+        treereduce(1, node_types, orig, chk, 1).unwrap()
     }
 
     fn bench_reduce_c<T: Clone + Check + Debug + Send + Sync + 'static>(

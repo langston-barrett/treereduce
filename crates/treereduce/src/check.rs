@@ -1,5 +1,6 @@
 use std::io;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::{Child, Command, ExitStatus, Stdio};
 
 use tempfile::NamedTempFile;
@@ -25,7 +26,7 @@ pub struct CmdCheck {
     cmd: String,
     args: Vec<String>,
     exit_codes: Vec<i32>,
-    temp_dir: Option<String>,
+    temp_dir: PathBuf,
     needs_file: bool,
     inherit_stdout: bool,
     inherit_stderr: bool,
@@ -51,12 +52,13 @@ impl CmdCheck {
         inherit_stdout: bool,
         inherit_stderr: bool,
     ) -> Self {
+        let temp_dir_path: Option<std::path::PathBuf> = temp_dir.as_ref().map(From::from);
         CmdCheck {
             needs_file: args.iter().any(|s| is_marker(s)),
+            temp_dir: temp_dir_path.unwrap_or_else(std::env::temp_dir),
             cmd,
             args,
             exit_codes,
-            temp_dir,
             inherit_stdout,
             inherit_stderr,
         }
@@ -65,7 +67,6 @@ impl CmdCheck {
     fn temp_file(&self, marker: &str) -> io::Result<NamedTempFile> {
         debug_assert!(is_marker(marker));
         let mut builder = tempfile::Builder::new();
-        let temp_dir_path: Option<std::path::PathBuf> = self.temp_dir.as_ref().map(From::from);
         if marker.len() > "@@".len() {
             let mut chars = marker.chars();
             let one = chars.next();
@@ -76,9 +77,9 @@ impl CmdCheck {
             builder
                 .prefix("treereduce-tmp-")
                 .suffix(&rest)
-                .tempfile_in(temp_dir_path.unwrap_or_else(std::env::temp_dir))
+                .tempfile_in(&self.temp_dir)
         } else {
-            builder.tempfile_in(temp_dir_path.unwrap_or_else(std::env::temp_dir))
+            builder.tempfile_in(&self.temp_dir)
         }
     }
 
@@ -90,7 +91,6 @@ impl CmdCheck {
         let mut args = Vec::new();
         for arg in &self.args {
             if is_marker(arg) {
-                // TODO(lb): Make in different temporary directory if needed
                 debug_assert!(!found);
                 found = true;
                 let f = self.temp_file(arg)?;

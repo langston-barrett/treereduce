@@ -18,8 +18,10 @@ tree-sitter-java = { version = "0.20", git = 'https://github.com/tree-sitter/tre
 [dependencies]
 anyhow = { version = "1", optional = true }
 clap = { version = "4", features = ["derive"], optional = true }
-env_logger = "0.9"
+clap-verbosity-flag = { version = "2", optional = true }
+env_logger = { version = "0.9", optional = true }
 log = "0.4"
+num_cpus = { version = "1", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tempfile = "3"
@@ -30,4 +32,10 @@ tree-sitter-edit = { path = "../../../tree-sitter-edit" }
 
 [features]
 default = []
-cli = ["dep:anyhow", "dep:clap"]
+cli = [
+  "dep:anyhow",
+  "dep:clap",
+  "dep:clap-verbosity-flag",
+  "dep:env_logger",
+  "dep:num_cpus",
+]

@@ -1,6 +1,5 @@
-// TODO(lb): Awareness of binding structure
-// TODO(lb): Awareness of matched delimiters
-// TODO(lb): Attempt to delete whole lists at once
+// TODO(#22): Awareness of binding structure
+// TODO(#23): Awareness of matched delimiters
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
@@ -502,11 +501,13 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     node_types: NodeTypes,
     orig: Original,
     check: T,
+    // TODO(lb): Maybe per-pass, benchmark
+    mut min_reduction: usize,
 ) -> Result<Edits, ReductionError> {
-    let min_task_size = 2; // TODO(lb): Configurable, maybe per-pass, benchmark
     log::info!("Original size: {}", orig.text.len());
-    // TODO(lb): SIGHUP handler to save intermediate progress
-    jobs = std::cmp::max(1, jobs); // TODO(lb): default to ncpu
+    // TODO(#25): SIGHUP handler to save intermediate progress
+    jobs = std::cmp::max(1, jobs);
+    min_reduction = std::cmp::max(1, min_reduction);
     let tasks = Tasks::new();
     let root = orig.tree.root_node();
     let root_id = NodeId::new(&root);
@@ -521,7 +522,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         orig,
         idle: Idle::new(),
         check,
-        min_task_size,
+        min_task_size: min_reduction,
     });
     let mut thread_handles = Vec::new();
     thread_handles.reserve(jobs);
