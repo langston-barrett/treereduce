@@ -6,6 +6,28 @@ To get set up to build from source, see {doc}`build`.
 
 In addition to Cargo and rustc, you'll need `clippy` to lint your code.
 
+## Tuning
+
+### Benchmarking
+
+(profiling)=
+### Profiling
+
+Profiling multi-threaded programs is hard. Use the included [Poor Man's
+Profiler][poor-man] like so:
+
+Start the task you want to profile:
+
+```sh
+cargo run --bin treereduce-c -- -j 12 --output - -s ./crates/treereduce/benches/c/hello-world-big.c 'clang -o /dev/null @@.c'
+```
+
+In a separate terminal:
+
+```sh
+./scripts/profile.sh |& tee prof.log
+```
+
 ## Releasing
 
 - Create branch with a name starting with `release`
@@ -18,3 +40,5 @@ In addition to Cargo and rustc, you'll need `clippy` to lint your code.
 - Verify that the release artifacts work as intended
 - Release the pre-release created by CI
 - Check that the crates were properly uploaded to crates.io
+
+[poor-man]: http://poormansprofiler.org/

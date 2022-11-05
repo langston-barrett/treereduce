@@ -282,6 +282,23 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tuning">
+   Tuning
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#benchmarking">
+     Benchmarking
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#profiling">
+     Profiling
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#releasing">
    Releasing
   </a>
@@ -311,6 +328,23 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tuning">
+   Tuning
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#benchmarking">
+     Benchmarking
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#profiling">
+     Profiling
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#releasing">
    Releasing
   </a>
@@ -331,6 +365,25 @@ title="Print to PDF"
 <div class="section" id="tools">
 <h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">#</a></h2>
 <p>In addition to Cargo and rustc, you’ll need <code class="docutils literal notranslate"><span class="pre">clippy</span></code> to lint your code.</p>
+</div>
+<div class="section" id="tuning">
+<h2>Tuning<a class="headerlink" href="#tuning" title="Permalink to this headline">#</a></h2>
+<div class="section" id="benchmarking">
+<h3>Benchmarking<a class="headerlink" href="#benchmarking" title="Permalink to this headline">#</a></h3>
+</div>
+<div class="section" id="profiling">
+<span id="id1"></span><h3>Profiling<a class="headerlink" href="#profiling" title="Permalink to this headline">#</a></h3>
+<p>Profiling multi-threaded programs is hard. Use the included <a class="reference external" href="http://poormansprofiler.org/">Poor Man’s
+Profiler</a> like so:</p>
+<p>Start the task you want to profile:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cargo run --bin treereduce-c -- -j <span class="m">12</span> --output - -s ./crates/treereduce/benches/c/hello-world-big.c <span class="s1">&#39;clang -o /dev/null @@.c&#39;</span>
+</pre></div>
+</div>
+<p>In a separate terminal:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./scripts/profile.sh <span class="p">|&amp;</span> tee prof.log
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="releasing">
 <h2>Releasing<a class="headerlink" href="#releasing" title="Permalink to this headline">#</a></h2>
