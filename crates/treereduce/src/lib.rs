@@ -1,8 +1,16 @@
-pub mod alter;
 pub mod check;
-pub mod dd;
+pub mod edits;
 mod id;
-pub mod render;
+mod node_types;
+mod original;
+pub mod reduce;
+mod versioned;
 
 #[cfg(feature = "cli")]
 pub mod cli;
+
+pub use check::*;
+pub use edits::*;
+pub use node_types::*;
+pub use original::*;
+pub use reduce::*;

@@ -3,6 +3,7 @@
 members = [
     "crates/treereduce",
     "crates/treereduce-c",
+    "crates/treereduce-cpp",
 ]
 
 # https://nnethercote.github.io/perf-book/build-configuration.html

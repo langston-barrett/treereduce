@@ -2,7 +2,7 @@
 name = "treereduce"
 description = "Fast, syntax-aware, multi-language program reducer based on delta debugging"
 version = "0.0.0"
-keywords = ["delta-debugging", "program-reducer", "test-case-minimization"]
+keywords = ["program-reducer", "test-case-minimization", "test-case-reduction"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"
@@ -11,12 +11,22 @@ homepage = "https://github.com/langston-barrett/treereduce"
 repository = "https://github.com/langston-barrett/treereduce"
 
 [dev-dependencies]
+bencher = "0.1"
 tree-sitter-c = "0.20"
+tree-sitter-java = { version = "0.20", git = 'https://github.com/tree-sitter/tree-sitter-java' }
 
 [dependencies]
 anyhow = { version = "1", optional = true }
 clap = { version = "4", features = ["derive"], optional = true }
+env_logger = "0.9"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
+thiserror = "1"
+tracing-mutex = "0.2"
 tree-sitter = "0.20"
+tree-sitter-edit = { path = "../../../tree-sitter-edit" }
 
 [features]
 default = []

@@ -1,3 +1,15 @@
 /target
 /venv
 /*.c
+
+# Tool output
+a.out
+bench.out
+halfempty.out
+treereduce.out
+treereduce-tmp-*
+
+# Byproducts of benchmarks
+/perf.data
+/perf.data.old
+*.svg

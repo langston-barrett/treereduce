@@ -1,13 +1,26 @@
+SHELL := $(shell which bash)
+.SHELLFLAGS := -ec
+
 CARGO = cargo
+FLAMEGRAPH = flamegraph
+RUSTUP = rustup
 
 CARGO_FLAGS =
 
-RS = $(shell ls ./**/*.rs)
-TOML = $(shell ls ./**/*.toml)
+RS = $(shell find . -name "*.rs")
+TOML = $(shell find . -name "*.toml")
+
+.PHONY: all
+.DEFAULT: all
+all: build fmt lint test
+
+.PHONY: bench
+bench:
+	$(RUSTUP) run nightly cargo $(CARGO_FLAGS) bench
 
 .PHONY: build
 build:
-	$(CARGO) $(CARGO_FLAGS) build
+	$(CARGO) $(CARGO_FLAGS) build --examples
 
 # requires: apt-get install -y musl-tools
 # requires: rustup target add x86_64-unknown-linux-musl
@@ -19,11 +32,23 @@ static:
 
 .PHONY: check
 check:
-	$(CARGO) check $(CARGO_FLAGS)
+	$(CARGO) check --examples $(CARGO_FLAGS)
 
 .PHONY: doc
 doc:
 	$(MAKE) -C doc html
+
+%.c.clang.svg: %.c $(RS)
+	$(CARGO) build $(CARGO_FLAGS) --release
+	$(FLAMEGRAPH) -o $@ -- target/release/treereduce-c -s $< ./scripts/clang.sh
+
+%.c.true.svg: %.c $(RS)
+	$(CARGO) build $(CARGO_FLAGS) --release
+	$(FLAMEGRAPH) -o $@ -- target/release/treereduce-c -s $< true
+
+%.c.false.svg: %.c $(RS)
+	$(CARGO) build $(CARGO_FLAGS) --release
+	$(FLAMEGRAPH) -o $@ -- target/release/treereduce-c --interesting-exit-code 1 -s $< false
 
 .PHONY: entr
 entr:
@@ -46,6 +71,3 @@ unit:
 
 .PHONY: test
 test: unit
-
-.PHONY: all
-all: build check fmt lint test

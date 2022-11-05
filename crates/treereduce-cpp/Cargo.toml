@@ -1,8 +1,8 @@
 [package]
-name = "treereduce-c"
-description = "Fast, parallel, syntax-aware program reducer for C"
+name = "treereduce-cpp"
+description = "Fast, parallel, syntax-aware program reducer for C++"
 version = "0.0.0"
-keywords = ["program-reducer", "test-case-minimization", "test-case-reduction", "c"]
+keywords = ["program-reducer", "test-case-minimization", "test-case-reduction", "c++"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"
@@ -13,4 +13,4 @@ repository = "https://github.com/langston-barrett/treereduce"
 [dependencies]
 anyhow = "1.0"
 treereduce = { version = "0.0.0", path = "../treereduce", features = ["cli"] }
-tree-sitter-c = "0.20"
+tree-sitter-cpp = "0.20"

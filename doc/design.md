@@ -13,6 +13,15 @@ Unlike more theoretical work in this space, the algorithm does *not* attempt to
 minimize the number of "oracle queries", that is, invocations of the
 user-provided "interestingness test".
 
+## Design Statement
+
+The aims of `treereduce` are more pragmatic than academic. It is based on
+similar principles to those discussed in the [AFL whitepaper][afl]:
+
+> [treereduce] does its best not to focus on any singular principle of operation
+> and not be a proof-of-concept for any specific theory. [...] The only true
+> governing principles are speed, reliability, and ease of use.
+
 (algorithm-assumptions)=
 ## Assumptions
 
@@ -32,7 +41,8 @@ execute several interestingness tests in parallel. Luckily, for the same reason,
 lock contention is unlikely to be a major issue---so long as executing the
 interestingness test doesn't require holding a lock, most threads will spend the
 majority of their time executing the interestingness test, rather than waiting
-for locks on shared data.
+for locks on shared data. (This claim has been validated by {ref}`profiling
+<profiling>` several {doc}`benchmarks <benchmarks>`.)
 
 The recent paper "[PARDIS][pardis] : Priority Aware Test Case Reduction"
 highlights the importance of *prioritization* of reductions. Greedy removal of
@@ -249,9 +259,14 @@ TODO(#16): BibTeX
 - Hodován, R., Kiss, Á. and Gyimóthy, T., 2017, September. Coarse hierarchical
   delta debugging. In 2017 IEEE international conference on software maintenance
   and evolution (ICSME) (pp. 194-203). IEEE.
+- https://blog.sigplan.org/2021/03/30/an-overview-of-test-case-reduction/
+- https://blog.trailofbits.com/2019/11/11/test-case-reduction/
+- https://www.drmaciver.com/2017/06/adaptive-delta-debugging/
+- https://www.drmaciver.com/2019/01/notes-on-test-case-reduction/
 
 [#1]: https://github.com/langston-barrett/treereduce/issues/1
 [#2]: https://github.com/langston-barrett/treereduce/issues/2
 [#3]: https://github.com/langston-barrett/treereduce/issues/3
 [#16]: https://github.com/langston-barrett/treereduce/issues/16
+[afl]: https://lcamtuf.coredump.cx/afl/technical_details.txt
 [pardis]: https://github.com/golnazgh/PARDIS
