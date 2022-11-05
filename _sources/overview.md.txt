@@ -35,8 +35,10 @@ TODO([#12][#12])
 
 ### How can I get results faster?
 
-These tips are in order of descending utility, the last few will technically
-make things a bit faster but the gains will be very minor.
+Try `--fast`. If that's not fast enough, read on.
+
+The following tips are in order of descending utility, the last few will
+technically make things a bit faster but the gains will be very minor.
 
 - Try `--passes 1`.
 - Set `--jobs` to something close to your number of CPU cores.
