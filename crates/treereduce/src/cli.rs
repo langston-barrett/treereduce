@@ -274,8 +274,7 @@ fn passes(args: &Args) -> Option<usize> {
 
 fn init_logger(args: &Args) {
     env_logger::builder()
-        .format_module_path(false) // seems not to work?
-        .format_timestamp(None)
+        .format(|buf, record| writeln!(buf, "[{}] {}", record.level(), record.args()))
         .filter_level(args.verbose.log_level_filter())
         .init();
 }

@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use std::io;
 use std::sync::atomic;
 use std::sync::atomic::AtomicUsize;
+use std::sync::mpsc;
 use std::sync::{Arc, Condvar, Mutex, PoisonError, TryLockError};
 use std::thread;
 use std::time::Duration;
@@ -30,6 +31,8 @@ fn node_size(node: &Node) -> usize {
 
 #[derive(Debug, Error)]
 pub enum ReductionError {
+    #[error("Error setting ctrl-c handler")]
+    Ctrlc(#[from] ctrlc::Error),
     #[error("I/O error")]
     Disconnect(#[from] io::Error),
     #[error("Lock poisoned")]
@@ -338,6 +341,7 @@ where
 
             // Wait for the process to finish, exit early (try this reduction again)
             // if another thread beat us to it.
+
             let state = self.check.start(&rendered)?;
 
             // TODO(lb): Why is this slow?
@@ -496,6 +500,17 @@ fn work<T: Check + Send + Sync + 'static>(
     Ok(())
 }
 
+fn ctrlc_handler() -> Result<mpsc::Receiver<()>, ReductionError> {
+    let (send_ctrl_c, recv_ctrl_c) = std::sync::mpsc::channel();
+    ctrlc::set_handler(move || {
+        eprintln!("HERE!");
+        send_ctrl_c
+            .send(())
+            .expect("Could not send signal on channel.")
+    })?;
+    Ok(recv_ctrl_c)
+}
+
 pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     mut jobs: usize,
     node_types: NodeTypes,
@@ -524,13 +539,31 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         check,
         min_task_size: min_reduction,
     });
+
     let mut thread_handles = Vec::new();
     thread_handles.reserve(jobs);
     for _ in 0..jobs {
         let actx = Arc::clone(&ctx);
         thread_handles.push(thread::spawn(move || work(actx, jobs)));
     }
+
+    // TODO(lb): This doesn't really work...
+    //
+    // https://github.com/Detegr/rust-ctrlc/issues/30
+    //
+    // Maybe try signal_hook crate?
+    let recv_ctrl_c = ctrlc_handler()?;
+
     while let Some(t) = thread_handles.pop() {
+        if recv_ctrl_c.try_recv().is_ok() {
+            eprintln!("CTRL-C!");
+            log::info!("Got ctrl-c, writing reduced test case...");
+            ctrlc::set_handler(move || {
+                log::info!("Got second ctrl-c, exiting without saving!");
+                std::process::exit(0);
+            })?;
+            return Ok(ctx.edits.read()?.get().clone());
+        }
         if t.is_finished() {
             t.join().expect("Thread panic'd!")?; // TODO(lb): don't expect
         } else {
