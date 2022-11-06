@@ -13,6 +13,7 @@ use tree_sitter::Tree;
 use crate::check::{Check, CmdCheck};
 use crate::edits::Edits;
 use crate::original::Original;
+use crate::reduce;
 use crate::stats;
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
@@ -221,21 +222,20 @@ fn check_initial_input_is_interesting(chk: &CmdCheck, tree: &Tree, src: &[u8]) -
 
 fn edits(
     args: &Args,
-    chk: CmdCheck,
     src_path: &str,
     src: &str,
     language: tree_sitter::Language,
     node_types_json_str: &'static str,
-    min_reduction: usize,
-) -> Result<(Tree, Edits)> {
-    debug_assert!(min_reduction > 0);
+    conf: reduce::Config<CmdCheck>,
+) -> Result<(Tree, Edits, reduce::Stats)> {
+    debug_assert!(conf.min_reduction > 0);
     let tree = parse(language, src)?;
     handle_parse_errors(src_path, &tree, &args.on_parse_error);
     let node_types = crate::node_types::NodeTypes::new(node_types_json_str)?;
     let tree2 = tree.clone();
     let orig = Original::new(tree, src.as_bytes().to_vec());
-    let edits = crate::reduce::treereduce(args.jobs, node_types, orig, chk, min_reduction)?;
-    Ok((tree2, edits))
+    let (edits, stats) = crate::reduce::treereduce(node_types, orig, conf)?;
+    Ok((tree2, edits, stats))
 }
 
 #[inline]
@@ -277,11 +277,22 @@ fn passes(args: &Args) -> Option<usize> {
     Some(args.passes)
 }
 
+#[inline]
 fn init_logger(args: &Args) {
     env_logger::builder()
         .format(|buf, record| writeln!(buf, "[{}] {}", record.level(), record.args()))
         .filter_level(args.verbose.log_level_filter())
         .init();
+}
+
+#[inline]
+fn configure(args: &Args) -> reduce::Config<CmdCheck> {
+    reduce::Config {
+        check: check(args),
+        jobs: args.jobs,
+        min_reduction: min_reduction(args),
+        record_stats: args.stats,
+    }
 }
 
 pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) -> Result<()> {
@@ -291,7 +302,7 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
 
     init_logger(&args);
     make_temp_dir(&args.temp_dir)?;
-    let chk = check(&args);
+    let conf = configure(&args);
 
     let (path, mut src) = if let Some(p) = &args.source {
         (p.to_string(), read_file(p)?)
@@ -302,7 +313,7 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
     let mut tree = parse(language, &src)?;
     handle_parse_errors(&path, &tree, &args.on_parse_error);
     if !args.no_verify {
-        check_initial_input_is_interesting(&chk, &tree, src.as_bytes())?;
+        check_initial_input_is_interesting(&conf.check, &tree, src.as_bytes())?;
     }
 
     let mut stats = stats::Stats::new();
@@ -322,14 +333,14 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
         );
         let pass_start = Instant::now();
 
-        (tree, es) = edits(
+        let reduction_stats: reduce::Stats;
+        (tree, es, reduction_stats) = edits(
             &args,
-            check(&args),
             &path,
             &src,
             language,
             node_types_json_str,
-            min_reduction(&args),
+            conf.clone(),
         )?;
         let mut new_src = Vec::new();
         tree_sitter_edit::render(&mut new_src, &tree, src.as_bytes(), &es)?;
@@ -340,6 +351,7 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
             duration: pass_start.elapsed(),
             start_size: pass_start_size,
             end_size: src.len(),
+            reduction_stats,
         };
         log::debug!(
             "Pass {} duration: {}ms",

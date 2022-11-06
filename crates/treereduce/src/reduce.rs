@@ -4,13 +4,10 @@
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
 use std::io;
-use std::sync::atomic;
-use std::sync::atomic::AtomicUsize;
-use std::sync::{Arc, Condvar, Mutex, PoisonError, TryLockError};
+use std::sync::{Arc, Condvar, Mutex, TryLockError};
 use std::thread;
 use std::time::Duration;
 
-use thiserror::Error;
 use tracing_mutex::stdsync::DebugRwLock;
 use tree_sitter::{Language, Node, Tree};
 use tree_sitter_edit::render;
@@ -22,27 +19,20 @@ use crate::node_types::NodeTypes;
 use crate::original::Original;
 use crate::versioned::Versioned;
 
+mod error;
+mod idle;
+mod stats;
 mod task;
 
+use error::ReductionError;
+use idle::Idle;
+use stats::StatCollector;
+pub use stats::Stats;
 use task::{PrioritizedTask, Task};
 
 fn node_size(node: &Node) -> usize {
     debug_assert!(node.start_byte() <= node.end_byte());
     node.end_byte() - node.start_byte()
-}
-
-#[derive(Debug, Error)]
-pub enum ReductionError {
-    #[error("I/O error")]
-    Disconnect(#[from] io::Error),
-    #[error("Lock poisoned")]
-    LockError(String),
-}
-
-impl<T> From<PoisonError<T>> for ReductionError {
-    fn from(e: PoisonError<T>) -> ReductionError {
-        ReductionError::LockError(format!("{}", e))
-    }
 }
 
 #[derive(Debug)]
@@ -106,43 +96,6 @@ impl Tasks {
 }
 
 #[derive(Debug)]
-struct Idle {
-    idle_threads: AtomicUsize,
-    idle_signal: Condvar,
-    idle_signal_mutex: Mutex<bool>,
-}
-
-impl Idle {
-    fn new() -> Self {
-        Idle {
-            idle_threads: AtomicUsize::new(0),
-            idle_signal: Condvar::new(),
-            idle_signal_mutex: Mutex::new(false),
-        }
-    }
-
-    fn count(&self) -> usize {
-        self.idle_threads.load(atomic::Ordering::SeqCst)
-    }
-
-    fn dec(&self) -> usize {
-        self.idle_threads.fetch_sub(1, atomic::Ordering::SeqCst)
-    }
-
-    fn inc(&self) -> usize {
-        let n = self.idle_threads.fetch_add(1, atomic::Ordering::SeqCst);
-        self.idle_signal.notify_all();
-        n
-    }
-
-    fn wait(&self, dur: Duration) -> Result<(), ReductionError> {
-        let lock = self.idle_signal_mutex.lock()?;
-        let _l = self.idle_signal.wait_timeout(lock, dur)?;
-        Ok(())
-    }
-}
-
-#[derive(Debug)]
 struct Ctx<T>
 where
     T: Check + Send + Sync + 'static,
@@ -153,6 +106,7 @@ where
     orig: Original,
     idle: Idle,
     check: T,
+    stats: StatCollector,
     min_task_size: usize,
 }
 
@@ -282,6 +236,7 @@ where
     where
         T: Check,
     {
+        self.stats.try_(task)?;
         '_outer: loop {
             let edits = self.add_task_edit(task)?;
             // TODO(lb): Benchmark this:
@@ -326,10 +281,15 @@ where
 
             if self.check.wait(state)? {
                 match self.edits.try_write() {
-                    Err(_) => continue,
+                    Err(_) => {
+                        log::debug!("Retrying {}", task.show());
+                        self.stats.retry(task)?;
+                        continue;
+                    }
                     Ok(mut w) => {
                         if !w.old_version(&edits) {
-                            log::debug!("Canceled {}!", task.show());
+                            log::debug!("Retrying {}", task.show());
+                            self.stats.retry(task)?;
                             continue;
                         }
                         *w = edits;
@@ -339,6 +299,7 @@ where
                             task.show(),
                             std::str::from_utf8(&rendered).unwrap_or("<not UTF-8>")
                         );
+                        self.stats.success(task)?;
                         return Ok(true);
                     }
                 }
@@ -461,18 +422,24 @@ fn work<T: Check + Send + Sync + 'static>(
     Ok(())
 }
 
+#[derive(Clone, Debug)]
+pub struct Config<T> {
+    pub check: T,
+    pub jobs: usize,
+    // TODO(lb): Maybe per-pass, benchmark
+    pub min_reduction: usize,
+    pub record_stats: bool,
+}
+
 pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
-    mut jobs: usize,
     node_types: NodeTypes,
     orig: Original,
-    check: T,
-    // TODO(lb): Maybe per-pass, benchmark
-    mut min_reduction: usize,
-) -> Result<Edits, ReductionError> {
+    conf: Config<T>,
+) -> Result<(Edits, Stats), ReductionError> {
     log::info!("Original size: {}", orig.text.len());
     // TODO(#25): SIGHUP handler to save intermediate progress
-    jobs = std::cmp::max(1, jobs);
-    min_reduction = std::cmp::max(1, min_reduction);
+    let jobs = std::cmp::max(1, conf.jobs);
+    let min_reduction = std::cmp::max(1, conf.min_reduction);
     let tasks = Tasks::new();
     let root = orig.tree.root_node();
     let root_id = NodeId::new(&root);
@@ -486,7 +453,8 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         edits: DebugRwLock::new(Versioned::new(Edits::new())),
         orig,
         idle: Idle::new(),
-        check,
+        check: conf.check,
+        stats: StatCollector::new(conf.record_stats),
         min_task_size: min_reduction,
     });
 
@@ -515,5 +483,6 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     let ctx = Arc::try_unwrap(ctx).expect("Multiple references!");
     debug_assert!(ctx.tasks.heap.read()?.is_empty());
     let edits = ctx.edits.read()?.clone();
-    Ok(edits.extract())
+    let stats = ctx.stats.done();
+    Ok((edits.extract(), stats?))
 }

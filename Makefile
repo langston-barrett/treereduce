@@ -27,6 +27,7 @@ build:
 .PHONY: static
 static:
 	$(CARGO) build $(CARGO_FLAGS) \
+	  --bin treereduce-c \
 	  --release \
 	  --target=x86_64-unknown-linux-musl
 

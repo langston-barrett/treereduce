@@ -2,10 +2,13 @@ use std::io;
 use std::io::Write;
 use std::time::Duration;
 
+use crate::reduce;
+
 pub struct Pass {
     pub duration: Duration,
     pub start_size: usize,
     pub end_size: usize,
+    pub reduction_stats: reduce::Stats,
 }
 
 impl Pass {
@@ -25,6 +28,20 @@ impl Pass {
             "Bytes/sec  : {:.2}",
             ((self.start_size - self.end_size) as f64 / self.duration.as_millis() as f64) * 1000.0
         )?;
+
+        // TODO(lb): Make this prettier
+        writeln!(w, "Tries:")?;
+        for (strat, tries) in self.reduction_stats.tries.iter() {
+            writeln!(w, "{} : {}", strat, tries)?;
+        }
+        writeln!(w, "Retries:")?;
+        for (strat, retries) in self.reduction_stats.retries.iter() {
+            writeln!(w, "{} : {}", strat, retries)?;
+        }
+        writeln!(w, "Success:")?;
+        for (strat, success) in self.reduction_stats.successes.iter() {
+            writeln!(w, "{} : {}", strat, success)?;
+        }
         Ok(())
     }
 }
