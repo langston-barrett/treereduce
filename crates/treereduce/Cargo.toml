@@ -19,7 +19,6 @@ tree-sitter-java = { version = "0.20", git = 'https://github.com/tree-sitter/tre
 anyhow = { version = "1", optional = true }
 clap = { version = "4", features = ["derive"], optional = true }
 clap-verbosity-flag = { version = "2", optional = true }
-ctrlc = "3"
 env_logger = { version = "0.9", optional = true }
 log = "0.4"
 num_cpus = { version = "1", optional = true }
@@ -29,7 +28,7 @@ tempfile = "3"
 thiserror = "1"
 tracing-mutex = "0.2"
 tree-sitter = "0.20"
-tree-sitter-edit = { path = "../../../tree-sitter-edit" }
+tree-sitter-edit = "0.1"
 
 [features]
 default = []

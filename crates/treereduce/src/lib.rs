@@ -4,6 +4,7 @@ mod id;
 mod node_types;
 mod original;
 pub mod reduce;
+mod stats;
 mod versioned;
 
 #[cfg(feature = "cli")]

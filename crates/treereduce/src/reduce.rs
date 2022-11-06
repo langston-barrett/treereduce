@@ -1,13 +1,11 @@
 // TODO(#22): Awareness of binding structure
 // TODO(#23): Awareness of matched delimiters
 
-use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
 use std::io;
 use std::sync::atomic;
 use std::sync::atomic::AtomicUsize;
-use std::sync::mpsc;
 use std::sync::{Arc, Condvar, Mutex, PoisonError, TryLockError};
 use std::thread;
 use std::time::Duration;
@@ -24,6 +22,10 @@ use crate::node_types::NodeTypes;
 use crate::original::Original;
 use crate::versioned::Versioned;
 
+mod task;
+
+use task::{PrioritizedTask, Task};
+
 fn node_size(node: &Node) -> usize {
     debug_assert!(node.start_byte() <= node.end_byte());
     node.end_byte() - node.start_byte()
@@ -31,8 +33,6 @@ fn node_size(node: &Node) -> usize {
 
 #[derive(Debug, Error)]
 pub enum ReductionError {
-    #[error("Error setting ctrl-c handler")]
-    Ctrlc(#[from] ctrlc::Error),
     #[error("I/O error")]
     Disconnect(#[from] io::Error),
     #[error("Lock poisoned")]
@@ -42,46 +42,6 @@ pub enum ReductionError {
 impl<T> From<PoisonError<T>> for ReductionError {
     fn from(e: PoisonError<T>) -> ReductionError {
         ReductionError::LockError(format!("{}", e))
-    }
-}
-
-// Someday, this might be able to store Nodes directly:
-// https://github.com/tree-sitter/tree-sitter/issues/1241
-#[derive(Debug, PartialEq, Eq)]
-enum Task {
-    // TODO(lb): Track parent kind and field name for more accurate optionality
-    Explore(NodeId),
-    Delete(NodeId),
-    DeleteAll(Vec<NodeId>),
-    // Hoist(NodeId, NodeId),
-    // Delta(NodeId),
-}
-
-impl Task {
-    fn show(&self) -> String {
-        match self {
-            Task::Explore(_) => "explore".to_string(),
-            Task::Delete(_) => "delete".to_string(),
-            Task::DeleteAll(_) => "delete_all".to_string(),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-struct PrioritizedTask {
-    task: Task,
-    priority: usize,
-}
-
-impl Ord for PrioritizedTask {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.priority.cmp(&other.priority)
-    }
-}
-
-impl PartialOrd for PrioritizedTask {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
     }
 }
 
@@ -369,13 +329,14 @@ where
                     Err(_) => continue,
                     Ok(mut w) => {
                         if !w.old_version(&edits) {
-                            log::debug!("Cancel!");
+                            log::debug!("Canceled {}!", task.show());
                             continue;
                         }
                         *w = edits;
                         log::info!("Reduced to size: {}", rendered.len());
                         log::debug!(
-                            "New minimal program:\n{}",
+                            "Interesting {}, new minimal program:\n{}",
+                            task.show(),
                             std::str::from_utf8(&rendered).unwrap_or("<not UTF-8>")
                         );
                         return Ok(true);
@@ -500,17 +461,6 @@ fn work<T: Check + Send + Sync + 'static>(
     Ok(())
 }
 
-fn ctrlc_handler() -> Result<mpsc::Receiver<()>, ReductionError> {
-    let (send_ctrl_c, recv_ctrl_c) = std::sync::mpsc::channel();
-    ctrlc::set_handler(move || {
-        eprintln!("HERE!");
-        send_ctrl_c
-            .send(())
-            .expect("Could not send signal on channel.")
-    })?;
-    Ok(recv_ctrl_c)
-}
-
 pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     mut jobs: usize,
     node_types: NodeTypes,
@@ -547,23 +497,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         thread_handles.push(thread::spawn(move || work(actx, jobs)));
     }
 
-    // TODO(lb): This doesn't really work...
-    //
-    // https://github.com/Detegr/rust-ctrlc/issues/30
-    //
-    // Maybe try signal_hook crate?
-    let recv_ctrl_c = ctrlc_handler()?;
-
     while let Some(t) = thread_handles.pop() {
-        if recv_ctrl_c.try_recv().is_ok() {
-            eprintln!("CTRL-C!");
-            log::info!("Got ctrl-c, writing reduced test case...");
-            ctrlc::set_handler(move || {
-                log::info!("Got second ctrl-c, exiting without saving!");
-                std::process::exit(0);
-            })?;
-            return Ok(ctx.edits.read()?.get().clone());
-        }
         if t.is_finished() {
             t.join().expect("Thread panic'd!")?; // TODO(lb): don't expect
         } else {

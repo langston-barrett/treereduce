@@ -13,6 +13,7 @@ use tree_sitter::Tree;
 use crate::check::{Check, CmdCheck};
 use crate::edits::Edits;
 use crate::original::Original;
+use crate::stats;
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum OnParseError {
@@ -85,6 +86,10 @@ pub struct Args {
     /// File to output, use '-' for stdout
     #[arg(short, long, default_value = "treereduce.out")]
     pub output: String,
+
+    /// Print statistics
+    #[arg(long, default_value_t = false)]
+    stats: bool,
 
     #[clap(flatten)]
     verbose: Verbosity<InfoLevel>,
@@ -300,17 +305,23 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
         check_initial_input_is_interesting(&chk, &tree, src.as_bytes())?;
     }
 
+    let mut stats = stats::Stats::new();
+    stats.start_size = src.len();
     let reduce_start = Instant::now();
     let mut passes_done = 0;
     let max_passes = passes(&args);
     let mut es: Edits;
     while passes_done < max_passes.unwrap_or(std::usize::MAX) {
+        let pass_start_size = src.len();
         log::info!(
             "Starting pass {} / {}",
             passes_done + 1,
-            max_passes.map(|n| n.to_string()).unwrap_or("?".to_string())
+            max_passes
+                .map(|n| n.to_string())
+                .unwrap_or_else(|| "?".to_string())
         );
         let pass_start = Instant::now();
+
         (tree, es) = edits(
             &args,
             check(&args),
@@ -323,18 +334,34 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
         let mut new_src = Vec::new();
         tree_sitter_edit::render(&mut new_src, &tree, src.as_bytes(), &es)?;
         src = std::str::from_utf8(&new_src)?.to_string();
+
         passes_done += 1;
+        let pass_stats = stats::Pass {
+            duration: pass_start.elapsed(),
+            start_size: pass_start_size,
+            end_size: src.len(),
+        };
         log::debug!(
             "Pass {} duration: {}ms",
             passes_done,
-            pass_start.elapsed().as_millis()
+            pass_stats.duration.as_millis()
         );
+        stats.passes.push(pass_stats);
+
         if es.is_empty() {
             log::info!("Qutting after pass {} found no reductions", passes_done);
             break;
         }
     }
-    log::info!("Total time: {}ms", reduce_start.elapsed().as_millis());
+    stats.duration = reduce_start.elapsed();
+    log::info!("Total time: {}ms", stats.duration.as_millis());
+    stats.end_size = src.len();
     print_result(&args.output, &src)?;
+    if args.stats {
+        // https://nnethercote.github.io/perf-book/io.html#locking
+        let stdout = std::io::stdout();
+        let mut lock = stdout.lock();
+        stats.write_text(&mut lock)?;
+    }
     Ok(())
 }

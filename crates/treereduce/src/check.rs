@@ -129,6 +129,7 @@ impl CmdCheck {
                 })
                 .spawn()?
         } else {
+            eprintln!("HERE {:?}", args);
             let mut child = Command::new(&self.cmd)
                 .args(args)
                 .stdin(Stdio::piped())
