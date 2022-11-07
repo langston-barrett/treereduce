@@ -227,15 +227,15 @@ fn edits(
     language: tree_sitter::Language,
     node_types_json_str: &'static str,
     conf: reduce::Config<CmdCheck>,
-) -> Result<(Tree, Edits, reduce::Stats)> {
+) -> Result<(Tree, Edits)> {
     debug_assert!(conf.min_reduction > 0);
     let tree = parse(language, src)?;
     handle_parse_errors(src_path, &tree, &args.on_parse_error);
     let node_types = crate::node_types::NodeTypes::new(node_types_json_str)?;
     let tree2 = tree.clone();
     let orig = Original::new(tree, src.as_bytes().to_vec());
-    let (edits, stats) = crate::reduce::treereduce(node_types, orig, conf)?;
-    Ok((tree2, edits, stats))
+    let edits = crate::reduce::treereduce(node_types, orig, conf)?;
+    Ok((tree2, edits))
 }
 
 #[inline]
@@ -333,8 +333,7 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
         );
         let pass_start = Instant::now();
 
-        let reduction_stats: reduce::Stats;
-        (tree, es, reduction_stats) = edits(
+        (tree, es) = edits(
             &args,
             &path,
             &src,
@@ -351,7 +350,6 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
             duration: pass_start.elapsed(),
             start_size: pass_start_size,
             end_size: src.len(),
-            reduction_stats,
         };
         log::debug!(
             "Pass {} duration: {}ms",

@@ -1,75 +1,124 @@
-use std::collections::HashMap;
-use std::sync::PoisonError;
+use serde::{Deserialize, Serialize};
 
-use tracing_mutex::stdsync::{DebugMutex, TracingMutexGuard};
-
-use super::task::Task;
+use super::task::PrioritizedTask;
 
 // TODO(#29): Canceled/stale
-
-#[derive(Debug)]
-pub struct Stats {
-    pub tries: HashMap<String, usize>,
-    pub retries: HashMap<String, usize>,
-    pub successes: HashMap<String, usize>,
-}
+// TODO(lb): Output times of each message
 
 #[derive(Debug)]
 pub struct StatCollector {
     collect: bool,
-    tries: DebugMutex<HashMap<String, usize>>,
-    retries: DebugMutex<HashMap<String, usize>>,
-    successes: DebugMutex<HashMap<String, usize>>,
+}
+
+#[derive(Serialize, Deserialize)]
+enum Event {
+    Push {
+        #[serde(rename = "task")]
+        ptask: PrioritizedTask,
+    },
+    Pop {
+        #[serde(rename = "task")]
+        ptask: PrioritizedTask,
+    },
+    //
+    Try {
+        #[serde(rename = "task")]
+        ptask: PrioritizedTask,
+    },
+    Retry {
+        #[serde(rename = "task")]
+        ptask: PrioritizedTask,
+    },
+    Interesting {
+        #[serde(rename = "task")]
+        ptask: PrioritizedTask,
+    },
+    Uninteresting {
+        #[serde(rename = "task")]
+        ptask: PrioritizedTask,
+    },
 }
 
 impl StatCollector {
     pub fn new(collect: bool) -> Self {
-        StatCollector {
-            collect,
-            tries: DebugMutex::new(HashMap::new()),
-            retries: DebugMutex::new(HashMap::new()),
-            successes: DebugMutex::new(HashMap::new()),
-        }
+        StatCollector { collect }
     }
 
-    pub fn try_(
-        &self,
-        task: &Task,
-    ) -> Result<(), PoisonError<TracingMutexGuard<'_, HashMap<String, usize>>>> {
+    pub fn push(&self, ptask: &PrioritizedTask) -> Result<(), serde_json::Error> {
         if !self.collect {
             return Ok(());
         }
-        *self.tries.lock()?.entry(task.show()).or_insert(0) += 1;
+        eprintln!(
+            "{}",
+            serde_json::to_string(&Event::Push {
+                ptask: ptask.clone()
+            })?
+        );
         Ok(())
     }
 
-    pub fn retry(
-        &self,
-        task: &Task,
-    ) -> Result<(), PoisonError<TracingMutexGuard<'_, HashMap<String, usize>>>> {
+    pub fn pop(&self, ptask: &PrioritizedTask) -> Result<(), serde_json::Error> {
         if !self.collect {
             return Ok(());
         }
-        *self.retries.lock()?.entry(task.show()).or_insert(0) += 1;
+        eprintln!(
+            "{}",
+            serde_json::to_string(&Event::Pop {
+                ptask: ptask.clone()
+            })?
+        );
         Ok(())
     }
 
-    pub fn success(
-        &self,
-        task: &Task,
-    ) -> Result<(), PoisonError<TracingMutexGuard<'_, HashMap<String, usize>>>> {
+    pub fn try_(&self, ptask: &PrioritizedTask) -> Result<(), serde_json::Error> {
         if !self.collect {
             return Ok(());
         }
-        *self.successes.lock()?.entry(task.show()).or_insert(0) += 1;
+        eprintln!(
+            "{}",
+            serde_json::to_string(&Event::Try {
+                ptask: ptask.clone()
+            })?
+        );
         Ok(())
     }
 
-    pub fn done(self) -> Result<Stats, PoisonError<HashMap<String, usize>>> {
-        Ok(Stats {
-            tries: self.tries.into_inner()?,
-            retries: self.retries.into_inner()?,
-            successes: self.successes.into_inner()?,
-        })
+    pub fn retry(&self, ptask: &PrioritizedTask) -> Result<(), serde_json::Error> {
+        if !self.collect {
+            return Ok(());
+        }
+        eprintln!(
+            "{}",
+            serde_json::to_string(&Event::Retry {
+                ptask: ptask.clone()
+            })?
+        );
+        Ok(())
+    }
+
+    pub fn interesting(&self, ptask: &PrioritizedTask) -> Result<(), serde_json::Error> {
+        if !self.collect {
+            return Ok(());
+        }
+        eprintln!(
+            "{}",
+            serde_json::to_string(&Event::Interesting {
+                ptask: ptask.clone()
+            })?
+        );
+        Ok(())
+    }
+
+    pub fn uninteresting(&self, ptask: &PrioritizedTask) -> Result<(), serde_json::Error> {
+        if !self.collect {
+            return Ok(());
+        }
+        eprintln!(
+            "{}",
+            serde_json::to_string(&Event::Uninteresting {
+                ptask: ptask.clone()
+            })?
+        );
+        Ok(())
     }
 }

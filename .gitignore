@@ -8,6 +8,7 @@ bench.out
 halfempty.out
 treereduce.out
 treereduce-tmp-*
+/*.jsonl
 
 # Byproducts of benchmarks
 /perf.data

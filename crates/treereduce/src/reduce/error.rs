@@ -7,6 +7,8 @@ use thiserror::Error;
 pub enum ReductionError {
     #[error("I/O error")]
     Disconnect(#[from] io::Error),
+    #[error("JSON serialization error")]
+    Json(#[from] serde_json::Error),
     #[error("Lock poisoned")]
     LockError(String),
 }

@@ -4,6 +4,7 @@
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
 use std::io;
+use std::sync::atomic::{self, AtomicUsize};
 use std::sync::{Arc, Condvar, Mutex, TryLockError};
 use std::thread;
 use std::time::Duration;
@@ -27,8 +28,7 @@ mod task;
 use error::ReductionError;
 use idle::Idle;
 use stats::StatCollector;
-pub use stats::Stats;
-use task::{PrioritizedTask, Task};
+use task::{PrioritizedTask, Task, TaskId};
 
 fn node_size(node: &Node) -> usize {
     debug_assert!(node.start_byte() <= node.end_byte());
@@ -38,6 +38,7 @@ fn node_size(node: &Node) -> usize {
 #[derive(Debug)]
 struct Tasks {
     heap: DebugRwLock<BinaryHeap<PrioritizedTask>>,
+    task_id: AtomicUsize,
     push_signal: Condvar,
     push_signal_mutex: Mutex<bool>,
 }
@@ -46,32 +47,75 @@ impl Tasks {
     fn new() -> Self {
         Tasks {
             heap: DebugRwLock::new(BinaryHeap::new()),
+            task_id: AtomicUsize::new(0),
             push_signal: Condvar::new(),
             push_signal_mutex: Mutex::new(false),
         }
     }
 
-    fn push(&self, pt: PrioritizedTask) -> Result<(), ReductionError> {
+    fn push(
+        &self,
+        task: Task,
+        priority: usize,
+        stats: &StatCollector,
+    ) -> Result<(), ReductionError> {
         {
             let mut w = self.heap.write()?;
+            let id = self.task_id.fetch_add(1, atomic::Ordering::SeqCst);
             log::debug!(
                 "Pushing {} task with priority {} onto heap of size {}",
-                pt.task.show(),
-                pt.priority,
+                task.show(),
+                priority,
                 w.len()
             );
-            w.push(pt);
+            let ptask = PrioritizedTask {
+                task,
+                id: TaskId { id },
+                priority,
+            };
+            stats.push(&ptask)?;
+            w.push(ptask);
         }
         // log::debug!("Heap size: {}", self.heap.read()?.len());
         self.push_signal.notify_one();
         Ok(())
     }
 
-    fn pop(&self) -> Result<Option<PrioritizedTask>, ReductionError> {
+    fn push_all(
+        &self,
+        stats: &StatCollector,
+        tasks: impl Iterator<Item = (Task, usize)>,
+    ) -> Result<(), ReductionError> {
+        {
+            let mut w = self.heap.write()?;
+            for (task, priority) in tasks {
+                let id = self.task_id.fetch_add(1, atomic::Ordering::SeqCst);
+                log::debug!(
+                    "Pushing {} task with priority {} onto heap of size {}",
+                    task.show(),
+                    priority,
+                    w.len()
+                );
+                let ptask = PrioritizedTask {
+                    task,
+                    id: TaskId { id },
+                    priority,
+                };
+                stats.push(&ptask)?;
+                w.push(ptask);
+            }
+        }
+        Ok(())
+    }
+
+    fn pop(&self, stats: &StatCollector) -> Result<Option<PrioritizedTask>, ReductionError> {
         // log::debug!("Heap size: {}", self.heap.read()?.len());
-        let task = self.heap.write()?.pop();
+        let ptask = self.heap.write()?.pop();
+        if let Some(pt) = &ptask {
+            stats.pop(pt)?;
+        }
         // log::debug!("Popped task with priority {}", task.as_ref().map(|t| t.priority).unwrap_or(0));
-        Ok(task)
+        Ok(ptask)
     }
 
     fn wait_for_push(&self, dur: Duration) -> Result<(), ReductionError> {
@@ -82,15 +126,6 @@ impl Tasks {
                 let _l = self.push_signal.wait_timeout(lock, dur)?;
                 Ok(())
             }
-        }
-    }
-
-    fn _wait_pop(&self, dur: Duration) -> Result<Option<PrioritizedTask>, ReductionError> {
-        if let Some(t) = self.heap.write()?.pop() {
-            Ok(Some(t))
-        } else {
-            self.wait_for_push(dur)?;
-            Ok(self.heap.write()?.pop())
         }
     }
 }
@@ -172,7 +207,7 @@ where
         // TODO(lb): What's the problem?
         // let point_o_one_seconds = Duration::new(0, 10000000);
         // Ok(self.tasks.wait_pop(point_o_one_seconds)?.map(|pt| pt.task))
-        let task = self.tasks.pop()?;
+        let task = self.tasks.pop(&self.stats)?;
         debug_assert!(
             task.as_ref().map(|t| t.priority).unwrap_or(std::usize::MAX) >= self.min_task_size
         );
@@ -187,29 +222,20 @@ where
         if priority < self.min_task_size {
             return Ok(());
         }
-        self.tasks.push(PrioritizedTask {
-            task,
-            // TODO(lb): Benchmark leaving this at 0
-            priority,
-        })
+        // TODO(lb): Benchmark leaving this at 0
+        self.tasks.push(task, priority, &self.stats)
     }
 
     fn push_explore_children(&self, node: Node) -> Result<(), ReductionError>
     where
         T: Check,
     {
-        // TODO(lb): Benchmark
-        let mut w = self.tasks.heap.write()?;
-        for child in node.children(&mut self.orig.tree.walk()) {
-            let priority = node_size(&child);
-            if priority < self.min_task_size {
-                continue;
-            }
-            w.push(PrioritizedTask {
-                task: Task::Explore(NodeId::new(&child)),
-                priority,
-            });
-        }
+        self.tasks.push_all(
+            &self.stats,
+            node.children(&mut self.orig.tree.walk())
+                .filter(|child| node_size(child) > self.min_task_size)
+                .map(|child| (Task::Explore(NodeId::new(&child)), node_size(&child))),
+        )?;
         for _ in 0..node.child_count() {
             self.tasks.push_signal.notify_one();
         }
@@ -232,12 +258,13 @@ where
     /// Check if the given edits yield an interesting tree. If so, and if the
     /// edits haven't been concurrently modified by another call to this
     /// function, replace the edits with the new ones.
-    fn interesting(&self, task: &Task) -> Result<bool, ReductionError>
+    fn interesting(&self, ptask: &PrioritizedTask) -> Result<bool, ReductionError>
     where
         T: Check,
     {
-        self.stats.try_(task)?;
+        self.stats.try_(ptask)?;
         '_outer: loop {
+            let task = &ptask.task;
             let edits = self.add_task_edit(task)?;
             // TODO(lb): Benchmark this:
             // if !self.edits.read()?.old_version(&edits) {
@@ -283,13 +310,13 @@ where
                 match self.edits.try_write() {
                     Err(_) => {
                         log::debug!("Retrying {}", task.show());
-                        self.stats.retry(task)?;
+                        self.stats.retry(ptask)?;
                         continue;
                     }
                     Ok(mut w) => {
                         if !w.old_version(&edits) {
                             log::debug!("Retrying {}", task.show());
-                            self.stats.retry(task)?;
+                            self.stats.retry(ptask)?;
                             continue;
                         }
                         *w = edits;
@@ -299,12 +326,13 @@ where
                             task.show(),
                             std::str::from_utf8(&rendered).unwrap_or("<not UTF-8>")
                         );
-                        self.stats.success(task)?;
+                        self.stats.interesting(ptask)?;
                         return Ok(true);
                     }
                 }
             } else {
                 log::debug!("Uninteresting.");
+                self.stats.uninteresting(ptask)?;
                 return Ok(false);
             }
         }
@@ -351,38 +379,29 @@ fn explore<T: Check + Send + Sync + 'static>(
     Ok(())
 }
 
-fn delete<T: Check + Send + Sync + 'static>(
-    tctx: &ThreadCtx<T>,
-    node_id: NodeId,
-) -> Result<(), ReductionError> {
-    // log::debug!("Deleting {}...", tctx.find(node_id).kind());
-    if tctx.ctx.interesting(&Task::Delete(node_id))? {
-        // This tree was deleted, no need to recurse on children
-        // eprintln!("Interesting deletion of {}", node.kind());
-        Ok(())
-    } else {
-        tctx.ctx.push_explore_children(tctx.find(&node_id))
-    }
-}
-
-fn delete_all<T: Check + Send + Sync + 'static>(
-    tctx: &ThreadCtx<T>,
-    node_ids: Vec<NodeId>,
-) -> Result<(), ReductionError> {
-    // No need to check whether it was interesting, because the children will be
-    // individually handled by `delete`.
-    tctx.ctx.interesting(&Task::DeleteAll(node_ids))?;
-    Ok(())
-}
-
 fn dispatch<T: Check + Send + Sync + 'static>(
     tctx: &ThreadCtx<T>,
-    task: Task,
+    ptask: PrioritizedTask,
 ) -> Result<(), ReductionError> {
-    match task {
+    match ptask.task {
         Task::Explore(node_id) => explore(tctx, node_id),
-        Task::Delete(node_id) => delete(tctx, node_id),
-        Task::DeleteAll(node_ids) => delete_all(tctx, node_ids),
+        Task::Delete(node_id) => {
+            // log::debug!("Deleting {}...", tctx.find(node_id).kind());
+            if tctx.ctx.interesting(&ptask)? {
+                // This tree was deleted, no need to recurse on children
+                // eprintln!("Interesting deletion of {}", node.kind());
+                Ok(())
+            } else {
+                tctx.ctx.push_explore_children(tctx.find(&node_id))?;
+                Ok(())
+            }
+        }
+        Task::DeleteAll(_) => {
+            // No need to check whether it was interesting, because the children will be
+            // individually handled by `delete`.
+            let _ = tctx.ctx.interesting(&ptask);
+            Ok(())
+        }
     }
 }
 
@@ -403,17 +422,17 @@ fn work<T: Check + Send + Sync + 'static>(
             tctx.ctx.tasks.wait_for_push(not_long)?;
             tctx.ctx.idle.dec();
         }
-        while let Some(task) = tctx.ctx.pop_task()? {
+        while let Some(ptask) = tctx.ctx.pop_task()? {
             log::debug!(
                 "Popped {} task with priority {}",
-                task.task.show(),
-                task.priority
+                ptask.task.show(),
+                ptask.priority
             );
             // TODO(lb): Benchmark, but seems like a win
-            if task.priority < ctx.min_task_size {
+            if ptask.priority < ctx.min_task_size {
                 continue;
             }
-            dispatch(&tctx, task.task)?;
+            dispatch(&tctx, ptask)?;
         }
         let num_idle = tctx.ctx.idle.inc();
         log::debug!("Idling {} / {}...", num_idle + 1, num_threads);
@@ -435,7 +454,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     node_types: NodeTypes,
     orig: Original,
     conf: Config<T>,
-) -> Result<(Edits, Stats), ReductionError> {
+) -> Result<Edits, ReductionError> {
     log::info!("Original size: {}", orig.text.len());
     // TODO(#25): SIGHUP handler to save intermediate progress
     let jobs = std::cmp::max(1, conf.jobs);
@@ -443,10 +462,8 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     let tasks = Tasks::new();
     let root = orig.tree.root_node();
     let root_id = NodeId::new(&root);
-    tasks.push(PrioritizedTask {
-        task: Task::Explore(root_id),
-        priority: node_size(&root),
-    })?;
+    let stats = StatCollector::new(conf.record_stats);
+    tasks.push(Task::Explore(root_id), node_size(&root), &stats)?;
     let ctx = Arc::new(Ctx {
         node_types,
         tasks,
@@ -454,7 +471,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         orig,
         idle: Idle::new(),
         check: conf.check,
-        stats: StatCollector::new(conf.record_stats),
+        stats,
         min_task_size: min_reduction,
     });
 
@@ -483,6 +500,5 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     let ctx = Arc::try_unwrap(ctx).expect("Multiple references!");
     debug_assert!(ctx.tasks.heap.read()?.is_empty());
     let edits = ctx.edits.read()?.clone();
-    let stats = ctx.stats.done();
-    Ok((edits.extract(), stats?))
+    Ok(edits.extract())
 }
