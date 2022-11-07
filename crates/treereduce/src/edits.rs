@@ -40,6 +40,10 @@ impl Edits {
     pub fn should_omit(&self, node: &Node) -> bool {
         self.omit.contains(&NodeId::new(node))
     }
+
+    pub fn should_omit_id(&self, node_id: &NodeId) -> bool {
+        self.omit.contains(node_id)
+    }
 }
 
 impl Default for Edits {

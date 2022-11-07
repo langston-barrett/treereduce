@@ -243,17 +243,27 @@ where
         Ok(())
     }
 
-    fn add_task_edit(&self, task: &Task) -> Result<Versioned<Edits>, ReductionError> {
+    fn add_task_edit(&self, task: &Task) -> Result<Option<Versioned<Edits>>, ReductionError> {
+        let edits = self.edits.read()?;
         match task {
             Task::Explore(_) => {
                 debug_assert!(false);
-                Ok(self.edits.read()?.clone())
+                Ok(Some(self.edits.read()?.clone()))
             }
             Task::Reduce(Reduction::Delete(node_id)) => {
-                Ok(self.edits.read()?.mutate_clone(|e| e.omit_id(*node_id)))
+                if edits.get().should_omit_id(node_id) {
+                    return Ok(None);
+                }
+                Ok(Some(edits.mutate_clone(|e| e.omit_id(*node_id))))
             }
             Task::Reduce(Reduction::DeleteAll(node_ids)) => {
-                Ok(self.edits.read()?.mutate_clone(|e| e.omit_ids(node_ids)))
+                if node_ids
+                    .iter()
+                    .all(|node_id| edits.get().should_omit_id(node_id))
+                {
+                    return Ok(None);
+                }
+                Ok(Some(edits.mutate_clone(|e| e.omit_ids(node_ids))))
             }
         }
     }
@@ -272,7 +282,11 @@ where
         let _span = debug_span!("Trying", id, kind, priority);
         '_outer: loop {
             let task = &ptask.task;
-            let edits = self.add_task_edit(task)?;
+            let edits = if let Some(es) = self.add_task_edit(task)? {
+                es
+            } else {
+                return Ok(false);
+            };
             // TODO(lb): Benchmark this:
             // if !self.edits.read()?.old_version(&edits) {
             //     return Ok(InterestingCheck::TryAgain);
