@@ -14,3 +14,4 @@ treereduce-tmp-*
 /perf.data
 /perf.data.old
 *.svg
+*.ipynb

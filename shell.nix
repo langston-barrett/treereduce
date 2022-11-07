@@ -3,13 +3,15 @@
 }:
 
 pkgs.mkShell {
+  LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib/:/run/opengl-driver/lib/";
   nativeBuildInputs = [
     pkgs.creduce
     pkgs.cargo-flamegraph
     pkgs.halfempty
     pkgs.rust-analyzer
     pkgs.rustup
-    unstable.python310
-    unstable.python310Packages.mypy
+    
+    pkgs.python3Packages.python-lsp-server
+    pkgs.python3Packages.virtualenv
   ];
 }

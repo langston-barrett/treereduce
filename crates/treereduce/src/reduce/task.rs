@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, fmt::Display};
 
 use serde::{Deserialize, Serialize};
 
@@ -12,9 +12,17 @@ pub struct TaskId {
 }
 
 impl TaskId {
-    pub fn _get(&self) -> usize {
+    pub fn get(&self) -> usize {
         self.id
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Reduction {
+    Delete(NodeId),
+    DeleteAll(Vec<NodeId>),
+    // Hoist(NodeId, NodeId),
+    // Delta(NodeId),
 }
 
 // Someday, this might be able to store Nodes directly:
@@ -25,19 +33,16 @@ impl TaskId {
 pub enum Task {
     // TODO(lb): Track parent kind and field name for more accurate optionality
     Explore(NodeId),
-    Delete(NodeId),
-    DeleteAll(Vec<NodeId>),
-    // Hoist(NodeId, NodeId),
-    // Delta(NodeId),
+    Reduce(Reduction),
 }
 
 // TODO(lb): Show with priority, task ID
 impl Task {
-    pub fn show(&self) -> String {
+    pub fn kind(&self) -> String {
         match self {
             Task::Explore(_) => "explore".to_string(),
-            Task::Delete(_) => "delete".to_string(),
-            Task::DeleteAll(_) => "delete_all".to_string(),
+            Task::Reduce(Reduction::Delete(_)) => "delete".to_string(),
+            Task::Reduce(Reduction::DeleteAll(_)) => "delete_all".to_string(),
         }
     }
 }
@@ -59,5 +64,17 @@ impl Ord for PrioritizedTask {
 impl PartialOrd for PrioritizedTask {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl Display for PrioritizedTask {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "task {} of kind and {} and priority {}",
+            self.id.get(),
+            self.task.kind(),
+            self.priority
+        )
     }
 }

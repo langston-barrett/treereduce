@@ -8,6 +8,8 @@ use std::time::Instant;
 use anyhow::{Context, Result};
 use clap::{ArgGroup, Parser};
 use clap_verbosity_flag::{InfoLevel, Verbosity};
+use tracing::{debug, error, info, warn};
+use tracing_subscriber::fmt::format::FmtSpan;
 use tree_sitter::Tree;
 
 use crate::check::{Check, CmdCheck};
@@ -15,6 +17,8 @@ use crate::edits::Edits;
 use crate::original::Original;
 use crate::reduce;
 use crate::stats;
+
+mod formatter;
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum OnParseError {
@@ -46,10 +50,10 @@ fn handle_parse_errors(path: &str, tree: &Tree, on_parse_error: &OnParseError) {
         OnParseError::Warn if !node.has_error() => (),
         OnParseError::Error if !node.has_error() => (),
         OnParseError::Warn => {
-            log::warn!("Parse error in {}", path);
+            warn!(path, "Parse error in {}", path);
         }
         OnParseError::Error => {
-            log::error!("Parse error in {}", path);
+            error!(path, "Parse error in {}", path);
             process::exit(1);
         }
     }
@@ -66,10 +70,8 @@ const FAST_NUM_PASSES: usize = 1;
 #[command(author, version, about, long_about = None,
           group(ArgGroup::new("fast-xor-slow").arg("fast").arg("slow")),
           group(ArgGroup::new("passes-xor-stable").arg("passes").arg("stable")))]
-// TODO(#17): --stats
 // TODO(#6): stdout/stderr regex
 // TODO(#20): --timeout flag
-// TODO(#26): --verbosity flag
 pub struct Args {
     /// Source code to consume; if empty, parse from stdin
     #[arg(
@@ -84,13 +86,17 @@ pub struct Args {
     #[arg(short, long, default_value_t = num_cpus::get())]
     pub jobs: usize,
 
+    /// Log messages in JSON format
+    #[arg(long, default_value_t = false)]
+    pub json: bool,
+
     /// File to output, use '-' for stdout
     #[arg(short, long, default_value = "treereduce.out")]
     pub output: String,
 
     /// Print statistics
     #[arg(long, default_value_t = false)]
-    stats: bool,
+    pub stats: bool,
 
     #[clap(flatten)]
     verbose: Verbosity<InfoLevel>,
@@ -190,7 +196,7 @@ fn stdin_string() -> Result<String> {
 
 fn check(args: &Args) -> CmdCheck {
     if args.check.is_empty() {
-        eprintln!("Internal error: empty interestingness check!");
+        error!("Internal error: empty interestingness check!");
         std::process::exit(1);
     }
     let mut argv: Vec<_> = args.check.iter().collect();
@@ -214,7 +220,7 @@ fn check_initial_input_is_interesting(chk: &CmdCheck, tree: &Tree, src: &[u8]) -
         .interesting(&test)
         .context("Failed to check that initial input was interesting")?
     {
-        log::error!("Initial test was not interesting. See the usage documentation for help: https://langston-barrett.github.io/treereduce/usage.html");
+        error!("Initial test was not interesting. See the usage documentation for help: https://langston-barrett.github.io/treereduce/usage.html");
         std::process::exit(1);
     }
     Ok(())
@@ -278,11 +284,30 @@ fn passes(args: &Args) -> Option<usize> {
 }
 
 #[inline]
-fn init_logger(args: &Args) {
-    env_logger::builder()
-        .format(|buf, record| writeln!(buf, "[{}] {}", record.level(), record.args()))
-        .filter_level(args.verbose.log_level_filter())
-        .init();
+fn log_tracing_level(level: &log::Level) -> tracing::Level {
+    match level {
+        log::Level::Trace => tracing::Level::TRACE,
+        log::Level::Debug => tracing::Level::DEBUG,
+        log::Level::Info => tracing::Level::INFO,
+        log::Level::Warn => tracing::Level::WARN,
+        log::Level::Error => tracing::Level::ERROR,
+    }
+}
+
+#[inline]
+fn init_tracing(args: &Args) {
+    // TODO(lb): Make this less verbose, drop time
+    let builder = tracing_subscriber::fmt::fmt()
+        .with_span_events(FmtSpan::ENTER | FmtSpan::CLOSE)
+        .with_target(false)
+        .with_max_level(log_tracing_level(
+            &args.verbose.log_level().unwrap_or(log::Level::Info),
+        ));
+    if args.json {
+        builder.json().init();
+    } else {
+        builder.event_format(formatter::TerseFormatter).init();
+    }
 }
 
 #[inline]
@@ -291,7 +316,6 @@ fn configure(args: &Args) -> reduce::Config<CmdCheck> {
         check: check(args),
         jobs: args.jobs,
         min_reduction: min_reduction(args),
-        record_stats: args.stats,
     }
 }
 
@@ -300,7 +324,7 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
     debug_assert!(args.passes == DEFAULT_NUM_PASSES || !args.stable);
     debug_assert!(!(args.fast && args.slow));
 
-    init_logger(&args);
+    init_tracing(&args);
     make_temp_dir(&args.temp_dir)?;
     let conf = configure(&args);
 
@@ -324,7 +348,7 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
     let mut es: Edits;
     while passes_done < max_passes.unwrap_or(std::usize::MAX) {
         let pass_start_size = src.len();
-        log::info!(
+        info!(
             "Starting pass {} / {}",
             passes_done + 1,
             max_passes
@@ -351,7 +375,7 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
             start_size: pass_start_size,
             end_size: src.len(),
         };
-        log::debug!(
+        debug!(
             "Pass {} duration: {}ms",
             passes_done,
             pass_stats.duration.as_millis()
@@ -359,12 +383,12 @@ pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) 
         stats.passes.push(pass_stats);
 
         if es.is_empty() {
-            log::info!("Qutting after pass {} found no reductions", passes_done);
+            info!("Qutting after pass {} found no reductions", passes_done);
             break;
         }
     }
     stats.duration = reduce_start.elapsed();
-    log::info!("Total time: {}ms", stats.duration.as_millis());
+    info!("Total time: {}ms", stats.duration.as_millis());
     stats.end_size = src.len();
     print_result(&args.output, &src)?;
     if args.stats {
