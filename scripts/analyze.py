@@ -17,16 +17,24 @@ def main():
     counts = defaultdict(lambda: 0)
     for e in events:
         f = e["fields"]
-        if f["event"] == "push":
+        if f["event"] == "push" and f["kind"] != "explore":
             counts[f["kind"]] += 1
     
     interesting = fields_by_event_type(events, "interesting")
     uninteresting = fields_by_event_type(events, "uninteresting")
     retries = fields_by_event_type(events, "retry")
     
+    executions = []
+    for e in data:
+        if e.get("span", dict()).get("name", None) == "Waiting for command":
+            executions += [e]
+
 
     print(f"Interesting deletions: {sum(1 for f in interesting if f['kind'] == 'delete')} / {counts['delete']}")
     print(f"Interesting mass deletions: {sum(1 for f in interesting if f['kind'] == 'delete_all')} / {counts['delete_all']}")
+    print(f"Total interesting: {len(interesting)} / {sum(counts.values())}")
+    print("Executions:", len(executions))
+    print("Retries:", len(retries))
 
 if __name__ == "__main__":
     main()
