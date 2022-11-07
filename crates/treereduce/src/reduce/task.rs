@@ -71,7 +71,7 @@ impl Display for PrioritizedTask {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "task {} of kind and {} and priority {}",
+            "task {} of kind {} and priority {}",
             self.id.get(),
             self.task.kind(),
             self.priority

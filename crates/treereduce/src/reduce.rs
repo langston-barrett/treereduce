@@ -269,7 +269,7 @@ where
         let kind = ptask.task.kind();
         let priority = ptask.priority;
         // TODO(lb): Fields?
-        let _span = debug_span!("Trying {}", kind, priority);
+        let _span = debug_span!("Trying", id, kind, priority);
         '_outer: loop {
             let task = &ptask.task;
             let edits = self.add_task_edit(task)?;
@@ -313,7 +313,13 @@ where
             //     }
             // }
 
-            if self.check.wait(state)? {
+            let interesting: bool;
+            {
+                let _span = debug_span!("Waiting for command", id = id);
+                interesting = self.check.wait(state)?;
+            }
+
+            if interesting {
                 match self.edits.try_write() {
                     Err(_) => {
                         debug!(
@@ -327,6 +333,7 @@ where
                         continue;
                     }
                     Ok(mut w) => {
+                        let _span = debug_span!("Saving edits", id = id);
                         if !w.old_version(&edits) {
                             debug!(event = "retry", id, kind, priority, "Retrying {}", ptask);
                             continue;
@@ -368,6 +375,7 @@ fn explore<T: Check + Send + Sync + 'static>(
 ) -> Result<(), ReductionError> {
     // TODO(lb): Include kind in explore task to avoid find
     let node = tctx.find(&node_id);
+    let _span = debug_span!("Exploring", id = node_id.get());
     debug!("Exploring {}...", tctx.find(&node_id).kind());
     if tctx.ctx.node_types.optional_node(&node) {
         tctx.ctx
@@ -477,6 +485,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     orig: Original,
     conf: Config<T>,
 ) -> Result<Edits, ReductionError> {
+    let _span = debug_span!("Pass");
     info!("Original size: {}", orig.text.len());
     // TODO(#25): SIGHUP handler to save intermediate progress
     let jobs = std::cmp::max(1, conf.jobs);

@@ -1,4 +1,0 @@
-myst-nb==0.17
-jupytext==1
-# jupyterlab==3
-notebook
