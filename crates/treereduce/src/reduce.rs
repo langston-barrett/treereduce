@@ -35,6 +35,13 @@ fn node_size(node: &Node) -> usize {
 }
 
 #[derive(Debug)]
+enum Interesting {
+    Yes,
+    No,
+    Stale,
+}
+
+#[derive(Debug)]
 struct Tasks {
     heap: DebugRwLock<BinaryHeap<PrioritizedTask>>,
     task_id: AtomicUsize,
@@ -271,7 +278,7 @@ where
     /// Check if the given edits yield an interesting tree. If so, and if the
     /// edits haven't been concurrently modified by another call to this
     /// function, replace the edits with the new ones.
-    fn interesting(&self, ptask: &PrioritizedTask) -> Result<bool, ReductionError>
+    fn interesting(&self, ptask: &PrioritizedTask) -> Result<Interesting, ReductionError>
     where
         T: Check,
     {
@@ -285,7 +292,15 @@ where
             let edits = if let Some(es) = self.add_task_edit(task)? {
                 es
             } else {
-                return Ok(false);
+                debug!(
+                    event = "stale",
+                    id = id,
+                    kind = kind,
+                    priority = priority,
+                    "Task went stale: {}",
+                    ptask
+                );
+                return Ok(Interesting::Stale);
             };
             // TODO(lb): Benchmark this:
             // if !self.edits.read()?.old_version(&edits) {
@@ -364,7 +379,7 @@ where
                             kind,
                             std::str::from_utf8(&rendered).unwrap_or("<not UTF-8>")
                         );
-                        return Ok(true);
+                        return Ok(Interesting::Yes);
                     }
                 }
             } else {
@@ -372,7 +387,7 @@ where
                     event = "uninteresting",
                     id, kind, priority, "Uninteresting {}", ptask
                 );
-                return Ok(false);
+                return Ok(Interesting::No);
             }
         }
     }
@@ -427,14 +442,19 @@ fn dispatch<T: Check + Send + Sync + 'static>(
     match ptask.task {
         Task::Explore(node_id) => explore(tctx, node_id),
         Task::Reduce(Reduction::Delete(node_id)) => {
-            // debug!("Deleting {}...", tctx.find(node_id).kind());
-            if tctx.ctx.interesting(&ptask)? {
-                // This tree was deleted, no need to recurse on children
-                // eprintln!("Interesting deletion of {}", node.kind());
-                Ok(())
-            } else {
-                tctx.ctx.push_explore_children(tctx.find(&node_id))?;
-                Ok(())
+            let _span = debug_span!("Reducing", id = node_id.get());
+            match tctx.ctx.interesting(&ptask)? {
+                Interesting::Yes => {
+                    // This tree was deleted, no need to recurse on children
+                    Ok(())
+                }
+                Interesting::No => {
+                    tctx.ctx.push_explore_children(tctx.find(&node_id))?;
+                    Ok(())
+                }
+                // This tree and all of its children were deleted by an edit in
+                // a competing thread
+                Interesting::Stale => Ok(()),
             }
         }
         Task::Reduce(Reduction::DeleteAll(_)) => {

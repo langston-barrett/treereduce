@@ -4,8 +4,8 @@
 
 set -eu
 
-nsamples=20
-sleeptime=0.1
+nsamples=30
+sleeptime=0.0
 pid=$(pgrep "${1:-treereduce}")
 
 for x in $(seq 1 "${nsamples}"); do
