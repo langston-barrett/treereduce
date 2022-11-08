@@ -43,6 +43,49 @@ impl std::fmt::Display for Oracle {
 }
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
+pub enum Config {
+    Default,
+    Fast,
+    Slow,
+}
+
+impl Config {
+    pub fn flags(&self, tool: &Tool) -> Vec<&'static str> {
+        match tool {
+            Tool::Creduce => match self {
+                Config::Default => Vec::new(),
+                Config::Fast => Vec::new(),
+                Config::Slow => vec!["--sllooww"],
+            },
+            Tool::Halfempty => match self {
+                Config::Default => Vec::new(),
+                // 2x default values
+                Config::Fast => vec![
+                    "--bisect-skip-multiplier=0.0002",
+                    "--zero-skip-multiplier=0.0002",
+                ],
+                Config::Slow => vec!["--stable"],
+            },
+            Tool::Treereduce => match self {
+                Config::Default => Vec::new(),
+                Config::Fast => vec!["--fast"],
+                Config::Slow => vec!["--slow"],
+            },
+        }
+    }
+}
+
+impl std::fmt::Display for Config {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Config::Default => write!(f, "default"),
+            Config::Fast => write!(f, "fast"),
+            Config::Slow => write!(f, "slow"),
+        }
+    }
+}
+
+#[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum Tool {
     Creduce,
     Halfempty,
@@ -52,19 +95,21 @@ pub enum Tool {
 impl Tool {
     fn run(
         &self,
+        config: &Config,
         jobs: usize,
         in_file: &Path,
         test_bin: &str,
         test_args: Vec<String>,
     ) -> Result<Output> {
+        let mut args = config.flags(self);
         match self {
             Tool::Creduce => {
                 assert!(test_args.is_empty());
                 let j = &format!("{}", jobs);
-                let args = vec![
+                args.extend(vec![
                     "--n", j, "--tidy", test_bin,
                     OUT_FILE, // creduce outputs to the input file
-                ];
+                ]);
                 Command::new("creduce")
                     .args(args)
                     .stdout(Stdio::piped())
@@ -79,7 +124,7 @@ impl Tool {
                 assert!(test_args.is_empty());
                 let j = &format!("{}", jobs);
                 let path = &in_file.to_string_lossy();
-                let args = vec![
+                args.extend(vec![
                     "--noverify",
                     "--num-threads",
                     j,
@@ -87,7 +132,7 @@ impl Tool {
                     OUT_FILE,
                     test_bin,
                     path,
-                ];
+                ]);
                 Command::new("halfempty")
                     .args(args)
                     .stdout(Stdio::piped())
@@ -101,7 +146,7 @@ impl Tool {
             Tool::Treereduce => {
                 let j = &format!("{}", jobs);
                 let path = &in_file.to_string_lossy();
-                let mut args = vec![
+                args.extend(vec![
                     "--no-verify",
                     "--jobs",
                     j,
@@ -110,7 +155,7 @@ impl Tool {
                     "-s",
                     path,
                     &test_bin,
-                ];
+                ]);
                 args.extend::<Vec<&str>>(test_args.iter().map(|s| s.as_ref()).collect::<Vec<_>>());
                 Command::new("treereduce-c")
                     .args(args)
@@ -142,14 +187,17 @@ pub struct Args {
     #[arg(long, default_value_t = Oracle::False)]
     pub oracle: Oracle,
 
-    #[arg(long, default_values_t = vec![Tool::Treereduce], value_name = "TOOL")]
-    pub tool: Vec<Tool>,
-
     #[arg(short, long, default_value_t = 1)]
     pub jobs: usize,
 
+    #[arg(long, default_values_t = vec![Tool::Treereduce], value_name = "TOOL")]
+    pub tool: Vec<Tool>,
+
     #[arg(long, default_value_t = String::from("<unknown>"))]
     pub tool_version: String,
+
+    #[arg(long, default_values_t = vec![Config::Default], value_name = "CONF")]
+    pub config: Vec<Config>,
 
     #[arg(long, default_value_t = 1)]
     pub trials: usize,
@@ -160,7 +208,7 @@ pub struct Args {
 
 const OUT_FILE: &str = "bench.out";
 
-fn run_tool_on_file(args: &Args, tool: &Tool, file: &Path) -> Result<()> {
+fn run_tool_on_file(args: &Args, conf: &Config, tool: &Tool, file: &Path) -> Result<()> {
     let path_str = file.to_string_lossy();
     let (test_bin, test_args) = args.oracle.get();
     std::fs::copy(file, OUT_FILE)
@@ -169,7 +217,7 @@ fn run_tool_on_file(args: &Args, tool: &Tool, file: &Path) -> Result<()> {
         .with_context(|| format!("Failed to read input file {}", path_str))?;
     let start_size = src.len();
     let start = Instant::now();
-    let out = tool.run(args.jobs, file, &test_bin, test_args.clone())?;
+    let out = tool.run(conf, args.jobs, file, &test_bin, test_args.clone())?;
     if !out.status.success() {
         eprintln!(
             "Tool failed\nstdout: {}\nstderr: {}",
@@ -184,10 +232,11 @@ fn run_tool_on_file(args: &Args, tool: &Tool, file: &Path) -> Result<()> {
     std::fs::remove_file(OUT_FILE)?;
     let end_size = result.len();
     eprintln!(
-        "{},{},{},{},{},{},{}",
+        "{},{},{},{},{},{},{},{}",
         tool,
         args.tool_version,
         args.oracle,
+        conf,
         file.file_name().map(|s| s.to_str().unwrap()).unwrap(),
         start_size,
         end_size,
@@ -203,10 +252,12 @@ fn main() -> Result<()> {
         eprintln!("Jobs must be greater than 0.");
         return Ok(());
     }
-    for tool in &args.tool {
-        for file in &args.files {
-            for _ in 0..args.trials {
-                run_tool_on_file(&args, tool, file)?;
+    for conf in &args.config {
+        for tool in &args.tool {
+            for file in &args.files {
+                for _ in 0..args.trials {
+                    run_tool_on_file(&args, conf, tool, file)?;
+                }
             }
         }
     }
