@@ -77,7 +77,7 @@ pub struct Args {
     #[arg(
         short, long, default_value = None, value_name = "FILE")]
     pub source: Option<String>,
-
+    // todo: pathbuf, default_value_os_t
     /// Behavior on parse errors
     #[arg(long, default_value_t = OnParseError::Warn, value_name = "CHOICE")]
     on_parse_error: OnParseError,

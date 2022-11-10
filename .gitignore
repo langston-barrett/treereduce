@@ -13,5 +13,8 @@ treereduce-tmp-*
 # Byproducts of benchmarks
 /perf.data
 /perf.data.old
-*.svg
-*.ipynb
+/*.svg
+# Perses
+/perses-1.5.jar
+/*.orig
+/perses_result*/

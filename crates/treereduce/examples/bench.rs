@@ -19,15 +19,40 @@ pub enum Oracle {
     True,
 }
 
+const FALSE: &str = "/nix/store/i9q0jv6qnvg7zal98rqi7aq31k3p89hw-coreutils-9.0/bin/false";
+const TRUE: &str = "/nix/store/i9q0jv6qnvg7zal98rqi7aq31k3p89hw-coreutils-9.0/bin/true";
+const DEBUG: bool = true;
+
 impl Oracle {
-    fn get(&self) -> (String, Vec<String>) {
-        match self {
-            Oracle::Clang => ("./scripts/clang.sh".to_string(), vec![]),
-            Oracle::True => ("true".to_string(), vec![]),
-            Oracle::False => (
-                "/nix/store/i9q0jv6qnvg7zal98rqi7aq31k3p89hw-coreutils-9.0/bin/false".to_string(),
-                vec![],
-            ),
+    fn get(&self, tool: &Tool) -> (String, Vec<String>) {
+        match tool {
+            Tool::Creduce => match self {
+                Oracle::Clang => ("./scripts/clang-creduce.sh".to_string(), vec![]),
+                Oracle::False => (FALSE.to_string(), vec![]),
+                Oracle::True => (TRUE.to_string(), vec![]),
+            },
+            Tool::Halfempty => match self {
+                Oracle::Clang => ("./scripts/clang.sh".to_string(), vec![]),
+                Oracle::True => (TRUE.to_string(), vec![]),
+                Oracle::False => (FALSE.to_string(), vec![]),
+            },
+            Tool::Picireny => match self {
+                Oracle::Clang => ("./scripts/clang-picireny.sh".to_string(), vec![]),
+                Oracle::False => (FALSE.to_string(), vec![]),
+                Oracle::True => (TRUE.to_string(), vec![]),
+            },
+            Tool::Treereduce => match self {
+                Oracle::Clang => (
+                    "clang".to_string(),
+                    vec![
+                        "-o".to_string(),
+                        "/dev/null".to_string(),
+                        "@@.c".to_string(),
+                    ],
+                ),
+                Oracle::True => (TRUE.to_string(), vec![]),
+                Oracle::False => (FALSE.to_string(), vec![]),
+            },
         }
     }
 }
@@ -66,6 +91,11 @@ impl Config {
                 ],
                 Config::Slow => vec!["--stable"],
             },
+            Tool::Picireny => match self {
+                Config::Default => Vec::new(),
+                Config::Fast => Vec::new(),
+                Config::Slow => Vec::new(),
+            },
             Tool::Treereduce => match self {
                 Config::Default => Vec::new(),
                 Config::Fast => vec!["--fast"],
@@ -89,9 +119,11 @@ impl std::fmt::Display for Config {
 pub enum Tool {
     Creduce,
     Halfempty,
+    Picireny,
     Treereduce,
 }
 
+// TODO: Ability to print commands before executing them
 impl Tool {
     fn run(
         &self,
@@ -102,10 +134,10 @@ impl Tool {
         test_args: Vec<String>,
     ) -> Result<Output> {
         let mut args = config.flags(self);
+        let j = &format!("{}", jobs);
         match self {
             Tool::Creduce => {
                 assert!(test_args.is_empty());
-                let j = &format!("{}", jobs);
                 args.extend(vec![
                     "--n", j, "--tidy", test_bin,
                     OUT_FILE, // creduce outputs to the input file
@@ -114,7 +146,6 @@ impl Tool {
                     .args(args)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
-                    .env("CREDUCE", in_file)
                     .spawn()
                     .context("Failed to spawn c-reduce")?
                     .wait_with_output()
@@ -122,7 +153,6 @@ impl Tool {
             }
             Tool::Halfempty => {
                 assert!(test_args.is_empty());
-                let j = &format!("{}", jobs);
                 let path = &in_file.to_string_lossy();
                 args.extend(vec![
                     "--noverify",
@@ -137,14 +167,41 @@ impl Tool {
                     .args(args)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
-                    .env("HALFEMPTY", "1")
                     .spawn()
                     .context("Failed to spawn halfempty")?
                     .wait_with_output()
                     .context("Failed to spawn halfempty")
             }
+            Tool::Picireny => {
+                assert!(test_args.is_empty());
+                let path = &in_file.to_string_lossy();
+                args.extend(vec![
+                    "--grammar",
+                    "crates/treereduce/examples/assets/C.g4",
+                    "--start",
+                    "compilationUnit",
+                    "--jobs",
+                    j,
+                    "--output",
+                    OUT_FILE,
+                    "--test",
+                    test_bin,
+                    "--input",
+                    path,
+                ]);
+                if jobs > 1 {
+                    args.push("--parallel");
+                }
+                Command::new("picireny")
+                    .args(args)
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .context("Failed to spawn picireny")?
+                    .wait_with_output()
+                    .context("Failed to spawn picireny")
+            }
             Tool::Treereduce => {
-                let j = &format!("{}", jobs);
                 let path = &in_file.to_string_lossy();
                 args.extend(vec![
                     "--no-verify",
@@ -161,7 +218,6 @@ impl Tool {
                     .args(args)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
-                    .env("TREEREDUCE", "1")
                     .spawn()
                     .context("Failed to spawn treereduce-c")?
                     .wait_with_output()
@@ -176,6 +232,7 @@ impl std::fmt::Display for Tool {
         match self {
             Tool::Creduce => write!(f, "creduce"),
             Tool::Halfempty => write!(f, "halfempty"),
+            Tool::Picireny => write!(f, "picireny"),
             Tool::Treereduce => write!(f, "treereduce"),
         }
     }
@@ -206,16 +263,22 @@ pub struct Args {
     pub files: Vec<PathBuf>,
 }
 
-const OUT_FILE: &str = "bench.out";
+// Must have .c name for Clang+C-reduce
+const OUT_FILE: &str = "bench.c";
 
 fn run_tool_on_file(args: &Args, conf: &Config, tool: &Tool, file: &Path) -> Result<()> {
     let path_str = file.to_string_lossy();
-    let (test_bin, test_args) = args.oracle.get();
+    let (test_bin, test_args) = args.oracle.get(tool);
     std::fs::copy(file, OUT_FILE)
         .with_context(|| format!("Failed to copy input file {} to {}", path_str, OUT_FILE))?;
     let src = std::fs::read_to_string(file)
         .with_context(|| format!("Failed to read input file {}", path_str))?;
     let start_size = src.len();
+
+    if DEBUG {
+        eprintln!("Start:\n{}", src);
+    }
+
     let start = Instant::now();
     let out = tool.run(conf, args.jobs, file, &test_bin, test_args.clone())?;
     if !out.status.success() {
@@ -229,6 +292,9 @@ fn run_tool_on_file(args: &Args, conf: &Config, tool: &Tool, file: &Path) -> Res
     let duration = start.elapsed();
     let result = std::fs::read_to_string(OUT_FILE)
         .with_context(|| format!("Failed to read output file {}", "out"))?;
+    if DEBUG {
+        eprintln!("Result:\n{}", result);
+    }
     std::fs::remove_file(OUT_FILE)?;
     let end_size = result.len();
     eprintln!(

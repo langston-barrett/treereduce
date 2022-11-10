@@ -10,6 +10,9 @@ pkgs.mkShell {
     pkgs.halfempty
     pkgs.rust-analyzer
     pkgs.rustup
+
+    # Running perses/picireny:
+    pkgs.jre
     
     pkgs.python3Packages.python-lsp-server
     pkgs.python3Packages.virtualenv
