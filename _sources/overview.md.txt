@@ -4,8 +4,7 @@
 
 - **Fast**: `treereduce` uses a {doc}`novel algorithm <design>` for parallelized
   reduction of tree-shaped data, based on ideas from {ref}`recent research
-  <bib>`. It is written in Rust and has been {doc}`extensively benchmarked
-  <benchmarks>`.
+  <bib>`. It has been {doc}`extensively benchmarked <benchmarks>`.
 - **Effective**: `treereduce` produces {doc}`small programs <benchmarks>`.
 - **Robust**: `treereduce` is based on tree-sitter grammars, which are robust to
   parse errors. This means you can reduce syntactically invalid inputs, and
@@ -14,6 +13,7 @@
 - **Multi-language**: `treereduce` currently supports the following languages:
 
   * C
+  * C++
 
 ```{warning}
 TODO([#13][#13])
@@ -24,6 +24,16 @@ TODO([#13][#13])
 ```{warning}
 TODO([#12][#12])
 ```
+
+<!--
+
+| Tool                   | Input | Parallel |
+|------------------------|-------|----------|
+| [Halfempty][halfempty] | Any   | Y        |
+| [C-Reduce][creduce]    | C     | Y        |
+| [Picireny][picireny]   | ANTLR | Y        |
+
+-->
 
 - [Halfempty][halfempty]
 - [comby-reducer][comby-reducer]
@@ -55,8 +65,11 @@ technically make things a bit faster but the gains will be very minor.
 
 ### How can I get smaller tests?
 
-Try increasing `--passes`, using `--stable`, and running [Halfempty][halfempty]
-on the output.
+Try `--slow`. If that's not small enough, read on.
+
+- Use `--stable`. If that's too slow, increase `--passes`.
+- Set `--min-reduction 1`.
+- Run [Halfempty][halfempty] or another test-case reducer on the output.
 
 [halfempty]: https://github.com/googleprojectzero/halfempty
 [comby-reducer]: https://github.com/comby-tools/comby-reducer

@@ -366,7 +366,7 @@ title="Print to PDF"
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><strong>Fast</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> uses a <a class="reference internal" href="design.html"><span class="doc">novel algorithm</span></a> for parallelized
-reduction of tree-shaped data, based on ideas from <a class="reference internal" href="design.html#bib"><span class="std std-ref">recent research</span></a>. It is written in Rust and has been <a class="reference internal" href="benchmarks.html"><span class="doc">extensively benchmarked</span></a>.</p></li>
+reduction of tree-shaped data, based on ideas from <a class="reference internal" href="design.html#bib"><span class="std std-ref">recent research</span></a>. It has been <a class="reference internal" href="benchmarks.html"><span class="doc">extensively benchmarked</span></a>.</p></li>
 <li><p><strong>Effective</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> produces <a class="reference internal" href="benchmarks.html"><span class="doc">small programs</span></a>.</p></li>
 <li><p><strong>Robust</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is based on tree-sitter grammars, which are robust to
 parse errors. This means you can reduce syntactically invalid inputs, and
@@ -375,6 +375,7 @@ each grammar doesn’t need to be 100% perfect to work for all programs.</p></li
 <li><p><strong>Multi-language</strong>: <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> currently supports the following languages:</p>
 <ul>
 <li><p>C</p></li>
+<li><p>C++</p></li>
 </ul>
 </li>
 </ul>
@@ -389,6 +390,15 @@ each grammar doesn’t need to be 100% perfect to work for all programs.</p></li
 <p class="admonition-title">Warning</p>
 <p>TODO([#12][#12])</p>
 </div>
+<!--
+
+| Tool                   | Input | Parallel |
+|------------------------|-------|----------|
+| [Halfempty][halfempty] | Any   | Y        |
+| [C-Reduce][creduce]    | C     | Y        |
+| [Picireny][picireny]   | ANTLR | Y        |
+
+-->
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/googleprojectzero/halfempty">Halfempty</a></p></li>
 <li><p><a class="reference external" href="https://github.com/comby-tools/comby-reducer">comby-reducer</a></p></li>
@@ -423,8 +433,12 @@ stdout.</p></li>
 </div>
 <div class="section" id="how-can-i-get-smaller-tests">
 <h3>How can I get smaller tests?<a class="headerlink" href="#how-can-i-get-smaller-tests" title="Permalink to this headline">#</a></h3>
-<p>Try increasing <code class="docutils literal notranslate"><span class="pre">--passes</span></code>, using <code class="docutils literal notranslate"><span class="pre">--stable</span></code>, and running <a class="reference external" href="https://github.com/googleprojectzero/halfempty">Halfempty</a>
-on the output.</p>
+<p>Try <code class="docutils literal notranslate"><span class="pre">--slow</span></code>. If that’s not small enough, read on.</p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">--stable</span></code>. If that’s too slow, increase <code class="docutils literal notranslate"><span class="pre">--passes</span></code>.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">--min-reduction</span> <span class="pre">1</span></code>.</p></li>
+<li><p>Run <a class="reference external" href="https://github.com/googleprojectzero/halfempty">Halfempty</a> or another test-case reducer on the output.</p></li>
+</ul>
 </div>
 </div>
 </div>
