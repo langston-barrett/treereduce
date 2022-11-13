@@ -37,7 +37,10 @@ impl Oracle {
                 Oracle::False => (FALSE.to_string(), vec![]),
             },
             Tool::Picireny => match self {
-                Oracle::Clang => ("./scripts/clang-picireny.sh".to_string(), vec![]),
+                Oracle::Clang => (
+                    "./crates/treereduce/examples/scripts/clang-picireny.sh".to_string(),
+                    vec![],
+                ),
                 Oracle::False => (FALSE.to_string(), vec![]),
                 Oracle::True => (TRUE.to_string(), vec![]),
             },
@@ -175,6 +178,7 @@ impl Tool {
             Tool::Picireny => {
                 assert!(test_args.is_empty());
                 let path = &in_file.to_string_lossy();
+                let dir = tempfile::tempdir()?;
                 args.extend(vec![
                     "--grammar",
                     "crates/treereduce/examples/assets/C.g4",
@@ -182,8 +186,8 @@ impl Tool {
                     "compilationUnit",
                     "--jobs",
                     j,
-                    "--output",
-                    OUT_FILE,
+                    "-o",
+                    dir.path().to_str().unwrap(),
                     "--test",
                     test_bin,
                     "--input",
@@ -191,6 +195,9 @@ impl Tool {
                 ]);
                 if jobs > 1 {
                     args.push("--parallel");
+                }
+                if DEBUG {
+                    eprintln!("Running:\npicireny {}", args.join(" "));
                 }
                 Command::new("picireny")
                     .args(args)
@@ -211,9 +218,13 @@ impl Tool {
                     OUT_FILE,
                     "-s",
                     path,
+                    "--",
                     &test_bin,
                 ]);
                 args.extend::<Vec<&str>>(test_args.iter().map(|s| s.as_ref()).collect::<Vec<_>>());
+                if DEBUG {
+                    eprintln!("Running:\ntreereduce-c {}", args.join(" "));
+                }
                 Command::new("treereduce-c")
                     .args(args)
                     .stdout(Stdio::piped())

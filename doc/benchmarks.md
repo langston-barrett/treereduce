@@ -10,8 +10,7 @@ them that would lead to better results.
 
 ### Perses
 
-TODO(lb): File bug
+Can't handle C pre-processor. Fails spectacularly in the face of parse errors.
 
 ### Picireny
 
-TODO(lb): File bug
