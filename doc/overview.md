@@ -21,25 +21,35 @@ TODO([#13][#13])
 
 ## Comparison to Other Tools
 
-```{warning}
-TODO([#12][#12])
-```
+Test-case reduction tools form a spectrum: tools that are completely agnostic
+to the input format (e.g., Halfempty) are applicable in more situations, but
+will likely perform worse than highly-specialized tools (e.g., C-reduce).
+`treereduce` is somewhere in the middle: it is aware of the *syntax* of inputs,
+and works on a variety of different languages.
 
-<!--
+Perses and Picireny are also syntax-aware; they use ANTLR rather than tree-
+sitter grammars (making them unable to mutate malformed inputs). The goal of
+`treereduce` is to be faster and/or easier to use than these tools.
 
-| Tool                   | Input | Parallel |
-|------------------------|-------|----------|
-| [Halfempty][halfempty] | Any   | Y        |
-| [C-Reduce][creduce]    | C     | Y        |
-| [Picireny][picireny]   | ANTLR | Y        |
+The following table lists several test-case reduction tools:
 
--->
+| Tool                             | Input    | Grammar     | Parallel |
+|----------------------------------|----------|-------------|----------|
+| [comby-reducer][comby-reducer]   | C-like   | n/a         |          |
+| [C-Reduce][creduce]              | C        | n/a         | ✅       |
+| [GTR][gtr]                       | not sure | not sure    | ?        |
+| [Halfempty][halfempty]           | any      | n/a         | ✅       |
+| [Perses][perses]                 | \[note\] | ANTLR       | ?        |
+| [Picireny][picireny]             | any      | ANTLR       | ✅       |
+| `treereduce`                     | any      | tree-sitter | ✅       |
 
-- [Halfempty][halfempty]
-- [comby-reducer][comby-reducer]
-- [Perses][perses]
-- [Picireny][picireny]
-- [GTR][gtr]
+\[note\]: Perses supports the following languages:
+
+- C
+- Rust
+- Java 8
+- Go
+- System Verilog
 
 ## FAQ
 
@@ -71,6 +81,7 @@ Try `--slow`. If that's not small enough, read on.
 - Set `--min-reduction 1`.
 - Run [Halfempty][halfempty] or another test-case reducer on the output.
 
+[creduce]: https://embed.cs.utah.edu/creduce/
 [halfempty]: https://github.com/googleprojectzero/halfempty
 [comby-reducer]: https://github.com/comby-tools/comby-reducer
 [perses]: https://github.com/uw-pluverse/perses
