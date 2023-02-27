@@ -278,21 +278,26 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#tool-experience-report">
-   Tool Experience Report
+  <a class="reference internal nav-link" href="#time-and-quality">
+   Time and quality
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#perses">
-     Perses
+    <a class="reference internal nav-link" href="#basic-program">
+     Basic program
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#picireny">
-     Picireny
+    <a class="reference internal nav-link" href="#pre-processed-hello-world">
+     Pre-processed “Hello, world!”
     </a>
    </li>
   </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#data-collection">
+   Data collection
+  </a>
  </li>
 </ul>
 
@@ -314,21 +319,26 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#tool-experience-report">
-   Tool Experience Report
+  <a class="reference internal nav-link" href="#time-and-quality">
+   Time and quality
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#perses">
-     Perses
+    <a class="reference internal nav-link" href="#basic-program">
+     Basic program
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#picireny">
-     Picireny
+    <a class="reference internal nav-link" href="#pre-processed-hello-world">
+     Pre-processed “Hello, world!”
     </a>
    </li>
   </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#data-collection">
+   Data collection
+  </a>
  </li>
 </ul>
 
@@ -342,24 +352,58 @@ title="Print to PDF"
                 
   <div class="section" id="benchmarks">
 <h1>Benchmarks<a class="headerlink" href="#benchmarks" title="Permalink to this headline">#</a></h1>
+<p>The following benchmarks compare C-reduce, Halfempty, Picireny, and
+<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> on C and C++ source code; see <a class="reference internal" href="overview.html"><span class="doc">the overview</span></a> for
+general a general comparison of these tools.</p>
+<p>As discussed in the overview, one would generally expect that, as the most
+specialized tool, C-reduce will produce the smallest (highest-quality) outputs,
+with Picireny and <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> trailing it and Halfempty last.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>I am not an expert on many of the tools included in these benchmarks. I have
 tried my best to understand them, but there may be more effective ways of using
 them that would lead to better results.</p>
 </div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>TODO([#9][#9])</p>
+<div class="section" id="time-and-quality">
+<h2>Time and quality<a class="headerlink" href="#time-and-quality" title="Permalink to this headline">#</a></h2>
+<div class="section" id="basic-program">
+<h3>Basic program<a class="headerlink" href="#basic-program" title="Permalink to this headline">#</a></h3>
+<p>This benchmark involves running each tool with its default settings on a small
+C program. The “interestingness test” is whether the program still compiles.</p>
+<p>The following plots shows the time taken by the different tools (in
+milliseconds), and the resulting program size (lower is better). They show that
+<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is fastest, and produces the second-smallest (best) output file.</p>
+<p><img alt="Time taken by each tool to reduce the &quot;basic&quot; program" src="_images/basic-time.svg" />
+<img alt="Size of final test case produced by each tool on &quot;basic&quot; program" src="_images/basic-size.svg" /></p>
 </div>
-<div class="section" id="tool-experience-report">
-<h2>Tool Experience Report<a class="headerlink" href="#tool-experience-report" title="Permalink to this headline">#</a></h2>
-<div class="section" id="perses">
-<h3>Perses<a class="headerlink" href="#perses" title="Permalink to this headline">#</a></h3>
-<p>Can’t handle C pre-processor. Fails spectacularly in the face of parse errors.</p>
+<div class="section" id="pre-processed-hello-world">
+<h3>Pre-processed “Hello, world!”<a class="headerlink" href="#pre-processed-hello-world" title="Permalink to this headline">#</a></h3>
+<p>This benchmark involves running each tool with its default settings on a “hello
+world” program, after running the C pre-processor. The “interestingness test”
+is whether the program still compiles.</p>
+<p>With a timeout of 300s, only <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> was able to complete this task. It
+reduced the file size from 35123 to 4769 bytes.</p>
 </div>
-<div class="section" id="picireny">
-<h3>Picireny<a class="headerlink" href="#picireny" title="Permalink to this headline">#</a></h3>
+</div>
+<div class="section" id="data-collection">
+<h2>Data collection<a class="headerlink" href="#data-collection" title="Permalink to this headline">#</a></h2>
+<p>The data were collected using this script:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+
+<span class="nb">set</span> -e
+
+rm -f data.csv
+
+<span class="k">for</span> tool in creduce halfempty picireny treereduce<span class="p">;</span> <span class="k">do</span>
+  timeout 300s <span class="se">\</span>
+    cargo run --quiet --example bench -- <span class="se">\</span>
+      --config <span class="s2">&quot;</span><span class="si">${</span><span class="nv">2</span><span class="k">:-</span><span class="nv">default</span><span class="si">}</span><span class="s2">&quot;</span> <span class="se">\</span>
+      --jobs <span class="s2">&quot;</span><span class="k">$(</span>nproc<span class="k">)</span><span class="s2">&quot;</span> <span class="se">\</span>
+      --oracle clang <span class="se">\</span>
+      --tool <span class="s2">&quot;</span><span class="si">${</span><span class="nv">tool</span><span class="si">}</span><span class="s2">&quot;</span> <span class="se">\</span>
+      <span class="s2">&quot;</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span><span class="s2">&quot;</span> &gt;&gt; data.csv
+<span class="k">done</span>
+</pre></div>
 </div>
 </div>
 </div>

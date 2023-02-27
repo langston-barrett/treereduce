@@ -4,7 +4,7 @@
 
 - **Fast**: `treereduce` uses a {doc}`novel algorithm <design>` for parallelized
   reduction of tree-shaped data, based on ideas from {ref}`recent research
-  <bib>`. It has been {doc}`extensively benchmarked <benchmarks>`.
+  <bib>`. It has been {doc}`benchmarked <benchmarks>` against similar tools.
 - **Effective**: `treereduce` produces {doc}`small programs <benchmarks>`.
 - **Robust**: `treereduce` is based on tree-sitter grammars, which are robust to
   parse errors. This means you can reduce syntactically invalid inputs, and
