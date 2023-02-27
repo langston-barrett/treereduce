@@ -19,7 +19,7 @@ run:
 cargo install treereduce-<LANG>
 ```
 
-This will install binaries in `~/.cargo.bin` by default.
+This will install binaries in `~/.cargo/bin` by default.
 
 ## From Source
 
