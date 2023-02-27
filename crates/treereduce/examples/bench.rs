@@ -27,12 +27,18 @@ impl Oracle {
     fn get(&self, tool: &Tool) -> (String, Vec<String>) {
         match tool {
             Tool::Creduce => match self {
-                Oracle::Clang => ("./scripts/clang-creduce.sh".to_string(), vec![]),
+                Oracle::Clang => (
+                    "./crates/treereduce/examples/scripts/clang-creduce.sh".to_string(),
+                    vec![],
+                ),
                 Oracle::False => (FALSE.to_string(), vec![]),
                 Oracle::True => (TRUE.to_string(), vec![]),
             },
             Tool::Halfempty => match self {
-                Oracle::Clang => ("./scripts/clang.sh".to_string(), vec![]),
+                Oracle::Clang => (
+                    "./crates/treereduce/examples/scripts/clang-halfempty.sh".to_string(),
+                    vec![],
+                ),
                 Oracle::True => (TRUE.to_string(), vec![]),
                 Oracle::False => (FALSE.to_string(), vec![]),
             },
@@ -145,6 +151,9 @@ impl Tool {
                     "--n", j, "--tidy", test_bin,
                     OUT_FILE, // creduce outputs to the input file
                 ]);
+                if DEBUG {
+                    eprintln!("Running:\ncreduce {}", args.join(" "));
+                }
                 Command::new("creduce")
                     .args(args)
                     .stdout(Stdio::piped())
@@ -166,6 +175,9 @@ impl Tool {
                     test_bin,
                     path,
                 ]);
+                if DEBUG {
+                    eprintln!("Running:\nhalfempty {}", args.join(" "));
+                }
                 Command::new("halfempty")
                     .args(args)
                     .stdout(Stdio::piped())
@@ -287,7 +299,14 @@ fn run_tool_on_file(args: &Args, conf: &Config, tool: &Tool, file: &Path) -> Res
     let start_size = src.len();
 
     if DEBUG {
-        eprintln!("Start:\n{}", src);
+        eprintln!(
+            "Start:\n{}",
+            if src.len() < 500 {
+                src
+            } else {
+                src[..500].to_string()
+            }
+        );
     }
 
     let start = Instant::now();
@@ -308,11 +327,12 @@ fn run_tool_on_file(args: &Args, conf: &Config, tool: &Tool, file: &Path) -> Res
     }
     std::fs::remove_file(OUT_FILE)?;
     let end_size = result.len();
-    eprintln!(
-        "{},{},{},{},{},{},{},{}",
+    println!(
+        "{},{},{},{},{},{},{},{},{}",
         tool,
         args.tool_version,
         args.oracle,
+        args.jobs,
         conf,
         file.file_name().map(|s| s.to_str().unwrap()).unwrap(),
         start_size,
