@@ -79,8 +79,8 @@ multiple tasks before replacing the global edits.
 
 `treereduce` uses several strategies during program minimization:
 
-- *Deletion* (TODO([#1][#1])): When a child is optional, `treereduce` attempts to
-  delete it. For example, `treereduce` might delete the `const` in `const int x;`.
+- *Deletion*: When a child is optional, `treereduce` attempts to delete it. For
+  example, `treereduce` might delete the `const` in `const int x;`.
 - *Delta debugging* (TODO([#2][#2])): When a node has a list of children,
   `treereduce` uses *delta debugging* to delete as many as possible in an efficient
   way.
