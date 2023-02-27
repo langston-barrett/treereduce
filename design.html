@@ -452,8 +452,8 @@ multiple tasks before replacing the global edits.</p>
 <span id="id1"></span><h2>Reduction Strategies<a class="headerlink" href="#reduction-strategies" title="Permalink to this headline">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">treereduce</span></code> uses several strategies during program minimization:</p>
 <ul class="simple">
-<li><p><em>Deletion</em> (TODO(<a class="reference external" href="https://github.com/langston-barrett/treereduce/issues/1">#1</a>)): When a child is optional, <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> attempts to
-delete it. For example, <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> might delete the <code class="docutils literal notranslate"><span class="pre">const</span></code> in <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">int</span> <span class="pre">x;</span></code>.</p></li>
+<li><p><em>Deletion</em>: When a child is optional, <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> attempts to delete it. For
+example, <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> might delete the <code class="docutils literal notranslate"><span class="pre">const</span></code> in <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">int</span> <span class="pre">x;</span></code>.</p></li>
 <li><p><em>Delta debugging</em> (TODO(<a class="reference external" href="https://github.com/langston-barrett/treereduce/issues/2">#2</a>)): When a node has a list of children,
 <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> uses <em>delta debugging</em> to delete as many as possible in an efficient
 way.</p></li>
