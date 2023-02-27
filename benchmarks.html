@@ -295,6 +295,11 @@ title="Print to PDF"
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#worst-case">
+   Worst case
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#data-collection">
    Data collection
   </a>
@@ -334,6 +339,11 @@ title="Print to PDF"
     </a>
    </li>
   </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#worst-case">
+   Worst case
+  </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#data-collection">
@@ -385,6 +395,15 @@ is whether the program still compiles.</p>
 reduced the file size from 35123 to 4769 bytes.</p>
 </div>
 </div>
+<div class="section" id="worst-case">
+<h2>Worst case<a class="headerlink" href="#worst-case" title="Permalink to this headline">#</a></h2>
+<p>This benchmark involves running each tool with its default settings on a small
+C program. The “interestingness test” always fails. C-reduce is not present,
+because it attempts to verify that the interestingness test holds true for the
+initial input; to my knowledge this behavior is not configurable. The chart
+shows that <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is the fastest, by a wide margin.</p>
+<p><img alt="Time taken by each tool" src="_images/false-time.svg" /></p>
+</div>
 <div class="section" id="data-collection">
 <h2>Data collection<a class="headerlink" href="#data-collection" title="Permalink to this headline">#</a></h2>
 <p>The data were collected using this script:</p>
@@ -394,6 +413,7 @@ reduced the file size from 35123 to 4769 bytes.</p>
 
 rm -f data.csv
 
+<span class="nb">export</span> <span class="nv">PYTHONOPTIMIZE</span><span class="o">=</span><span class="m">1</span>
 <span class="k">for</span> tool in creduce halfempty picireny treereduce<span class="p">;</span> <span class="k">do</span>
   timeout 300s <span class="se">\</span>
     cargo run --quiet --example bench -- <span class="se">\</span>

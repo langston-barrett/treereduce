@@ -37,6 +37,16 @@ is whether the program still compiles.
 With a timeout of 300s, only `treereduce` was able to complete this task. It
 reduced the file size from 35123 to 4769 bytes.
 
+## Worst case
+
+This benchmark involves running each tool with its default settings on a small
+C program. The "interestingness test" always fails. C-reduce is not present,
+because it attempts to verify that the interestingness test holds true for the
+initial input; to my knowledge this behavior is not configurable. The chart
+shows that `treereduce` is the fastest, by a wide margin.
+
+![Time taken by each tool](img/false-time.svg)
+
 ## Data collection
 
 The data were collected using this script:
@@ -48,6 +58,7 @@ set -e
 
 rm -f data.csv
 
+export PYTHONOPTIMIZE=1
 for tool in creduce halfempty picireny treereduce; do
   timeout 300s \
     cargo run --quiet --example bench -- \
