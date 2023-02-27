@@ -303,11 +303,6 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#pseudocode">
-   Pseudocode
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#bibliography">
    Bibliography
   </a>
@@ -354,11 +349,6 @@ title="Print to PDF"
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#reduction-strategies">
    Reduction Strategies
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#pseudocode">
-   Pseudocode
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -460,151 +450,6 @@ way.</p></li>
 <li><p><em>Hoisting</em> (TODO(<a class="reference external" href="https://github.com/langston-barrett/treereduce/issues/3">#3</a>)): Nodes with a recursive structure may be replaced
 by their descendants, e.g. replacing <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">+</span> <span class="pre">(3</span> <span class="pre">*</span> <span class="pre">y)</span></code> with just <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p></li>
 </ul>
-</div>
-<div class="section" id="pseudocode">
-<h2>Pseudocode<a class="headerlink" href="#pseudocode" title="Permalink to this headline">#</a></h2>
-<p>A few notes:</p>
-<ul class="simple">
-<li><p>In practice, <code class="docutils literal notranslate"><span class="pre">weight</span></code> is simply the number of bytes in the source text of the
-node.</p></li>
-</ul>
-<p>TODO(lb): This is not current/complete.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NodeId</span><span class="p">:</span>
-    <span class="o">...</span>
-
-<span class="k">class</span> <span class="nc">Node</span><span class="p">:</span>
-    <span class="o">...</span>  <span class="c1"># defined in tree-sitter</span>
-
-    <span class="k">def</span> <span class="nf">is_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="o">...</span>
-
-    <span class="k">def</span> <span class="nf">is_optional</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="o">...</span>
-
-<span class="k">class</span> <span class="nc">Heap</span><span class="p">:</span>
-    <span class="o">...</span>
-
-<span class="k">class</span> <span class="nc">Tree</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">:</span> <span class="n">NodeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
-        <span class="o">...</span>
-
-    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="o">...</span>
-
-    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_node</span><span class="p">,</span> <span class="n">new_node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tree</span><span class="p">:</span>
-        <span class="o">...</span>
-
-    <span class="k">def</span> <span class="nf">root_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
-        <span class="o">...</span>
-
-<span class="n">enum</span> <span class="n">Task</span><span class="p">:</span>
-    <span class="n">Explore</span><span class="p">(</span><span class="n">NodeId</span><span class="p">)</span>
-    <span class="n">Delete</span><span class="p">(</span><span class="n">NodeId</span><span class="p">)</span>
-    <span class="n">Hoist</span><span class="p">(</span><span class="n">NodeId</span><span class="p">,</span> <span class="n">NodeId</span><span class="p">)</span>
-    <span class="n">Delta</span><span class="p">(</span><span class="n">NodeId</span><span class="p">)</span>
-
-<span class="k">class</span> <span class="nc">PrioritizedTask</span><span class="p">:</span>
-    <span class="n">task</span><span class="p">:</span> <span class="n">Task</span>
-    <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span>
-
-<span class="k">class</span> <span class="nc">Target</span><span class="p">:</span>
-    <span class="n">tree</span><span class="p">:</span> <span class="n">Tree</span>
-    <span class="n">text</span><span class="p">:</span> <span class="n">Text</span>
-
-<span class="k">class</span> <span class="nc">Ctx</span><span class="p">:</span>
-    <span class="n">target</span><span class="p">:</span> <span class="n">Target</span>
-    <span class="n">heap</span><span class="p">:</span> <span class="n">RwLock</span><span class="p">[</span><span class="n">Heap</span><span class="p">]</span>
-    <span class="n">edits</span><span class="p">:</span> <span class="n">RwLock</span><span class="p">[</span><span class="n">Edits</span><span class="p">]</span>
-    <span class="c1"># TODO(lb): Condition variables?</span>
-    <span class="n">threads</span><span class="p">:</span> <span class="n">AtomicUsize</span>
-    <span class="n">idle_threads</span><span class="p">:</span> <span class="n">AtomicUsize</span>
-
-<span class="k">def</span> <span class="nf">treereduce</span><span class="p">(</span><span class="n">source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="n">tree</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="n">source_code</span><span class="p">)</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="n">Target</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">source_code</span><span class="p">)</span>
-    <span class="n">ctx</span> <span class="o">=</span> <span class="n">Ctx</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">RwLock</span><span class="p">(</span><span class="n">Heap</span><span class="p">()),</span> <span class="n">Edits</span><span class="p">())</span>
-    <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">root_node</span><span class="p">()</span>
-    <span class="n">task</span> <span class="o">=</span> <span class="n">Explore</span><span class="p">(</span><span class="n">NodeId</span><span class="p">(</span><span class="n">root</span><span class="p">))</span>
-    <span class="n">ctx</span><span class="o">.</span><span class="n">heap</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">PrioritizedTask</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="n">weight</span><span class="p">(</span><span class="n">root</span><span class="p">)))</span>
-    <span class="n">threads</span> <span class="o">=</span> <span class="n">AtomicUsize</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">idle_threads</span> <span class="o">=</span> <span class="n">AtomicUsize</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">fork</span><span class="p">(</span><span class="n">spawn</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">,</span> <span class="n">threads</span><span class="p">,</span> <span class="n">idle_threads</span><span class="p">)</span>
-
-    <span class="c1"># Wait for all threads to finish and exit:</span>
-    <span class="k">while</span> <span class="n">tree</span><span class="o">.</span><span class="n">count_references</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">wait</span><span class="p">()</span>
-
-    <span class="k">return</span> <span class="n">tree</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
-
-<span class="c1"># -----------------------------------------------------------</span>
-<span class="c1"># Parallel structure of the computation</span>
-
-<span class="k">def</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">Tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">:</span> <span class="n">Heap</span><span class="p">,</span> <span class="n">threads</span><span class="p">:</span> <span class="n">AtomicUsize</span><span class="p">,</span> <span class="n">idle_threads</span><span class="p">:</span> <span class="n">AtomicUsize</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">threads</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">idle</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">idle</span><span class="p">:</span>
-            <span class="n">idle_threads</span> <span class="o">-=</span> <span class="mi">1</span>
-            <span class="n">idle</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">heap</span><span class="o">.</span><span class="n">lock</span><span class="p">()</span>
-        <span class="n">match</span> <span class="n">heap</span><span class="o">.</span><span class="n">pop_max</span><span class="p">():</span>
-            <span class="n">case</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">heap</span><span class="o">.</span><span class="n">unlock</span><span class="p">()</span>
-                <span class="n">idle</span> <span class="o">=</span> <span class="n">idle_logic</span><span class="p">(</span><span class="n">idle_threads</span><span class="p">)</span>
-            <span class="n">case</span> <span class="n">task</span><span class="p">:</span>
-                <span class="n">heap</span><span class="o">.</span><span class="n">unlock</span><span class="p">()</span>
-                <span class="n">dispatch</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">idle_logic</span><span class="p">(</span><span class="n">idle_threads</span><span class="p">:</span> <span class="n">AtomicUSize</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">idle_threads</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="n">idle_threads</span> <span class="o">==</span> <span class="n">NUM_THREADS</span><span class="p">:</span>
-        <span class="n">exit_thread</span><span class="p">()</span>
-    <span class="n">sleep</span><span class="p">()</span>  <span class="c1"># some kind of backoff</span>
-    <span class="k">return</span> <span class="kc">True</span>
-
-<span class="c1"># -----------------------------------------------------------</span>
-<span class="c1"># Reduction logic</span>
-
-<span class="k">def</span> <span class="nf">dispatch</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">Tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">:</span> <span class="n">Heap</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">match</span> <span class="n">task</span><span class="p">:</span>
-        <span class="n">case</span> <span class="n">Explore</span><span class="p">(</span><span class="n">node_id</span><span class="p">):</span>
-            <span class="n">explore</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
-        <span class="n">case</span> <span class="n">Delete</span><span class="p">(</span><span class="n">node_id</span><span class="p">):</span>
-            <span class="n">delete</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
-        <span class="n">case</span> <span class="n">Hoist</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Unimplemented&quot;</span> <span class="c1"># TODO(lb)</span>
-        <span class="n">case</span> <span class="n">Delta</span><span class="p">(</span><span class="n">node_id</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Unimplemented&quot;</span> <span class="c1"># TODO(lb)</span>
-
-<span class="k">def</span> <span class="nf">explore</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">Tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">:</span> <span class="n">Heap</span><span class="p">,</span> <span class="n">node_id</span><span class="p">:</span> <span class="n">NodeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">node</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">heap</span><span class="o">.</span><span class="n">lock</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_optional</span><span class="p">():</span>
-            <span class="n">heap</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">PrioritizedTask</span><span class="p">(</span><span class="n">Delete</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="n">weight</span><span class="p">(</span><span class="n">node</span><span class="p">))))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">():</span>
-                <span class="n">heap</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">PrioritizedTask</span><span class="p">(</span><span class="n">Explore</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="n">weight</span><span class="p">(</span><span class="n">child</span><span class="p">))))</span>
-        <span class="c1"># TODO(lb): Other tasks</span>
-
-<span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">Tree</span><span class="p">,</span> <span class="n">heap</span><span class="p">:</span> <span class="n">Heap</span><span class="p">,</span> <span class="n">node_id</span><span class="p">:</span> <span class="n">NodeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">pass</span>
-
-<span class="c1"># -----------------------------------------------------------</span>
-<span class="c1"># Helpers</span>
-
-<span class="k">def</span> <span class="nf">interesting_replacement</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">variant</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">interesting</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
-
-<span class="k">def</span> <span class="nf">weight</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-    <span class="o">...</span>
-
-<span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tree</span><span class="p">:</span>
-    <span class="o">...</span>
-
-<span class="k">def</span> <span class="nf">exit_thread</span><span class="p">():</span>
-    <span class="o">...</span>
-</pre></div>
-</div>
 </div>
 <div class="section" id="bibliography">
 <span id="bib"></span><h2>Bibliography<a class="headerlink" href="#bibliography" title="Permalink to this headline">#</a></h2>

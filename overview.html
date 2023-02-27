@@ -386,25 +386,68 @@ each grammar doesn’t need to be 100% perfect to work for all programs.</p></li
 </div>
 <div class="section" id="comparison-to-other-tools">
 <h2>Comparison to Other Tools<a class="headerlink" href="#comparison-to-other-tools" title="Permalink to this headline">#</a></h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>TODO([#12][#12])</p>
-</div>
-<!--
-
-| Tool                   | Input | Parallel |
-|------------------------|-------|----------|
-| [Halfempty][halfempty] | Any   | Y        |
-| [C-Reduce][creduce]    | C     | Y        |
-| [Picireny][picireny]   | ANTLR | Y        |
-
--->
+<p>Test-case reduction tools form a spectrum: tools that are completely agnostic
+to the input format (e.g., Halfempty) are applicable in more situations, but
+will likely perform worse than highly-specialized tools (e.g., C-reduce).
+<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is somewhere in the middle: it is aware of the <em>syntax</em> of inputs,
+and works on a variety of different languages.</p>
+<p>Perses and Picireny are also syntax-aware; they use ANTLR rather than tree-
+sitter grammars (making them unable to mutate malformed inputs). The goal of
+<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is to be faster and/or easier to use than these tools.</p>
+<p>The following table lists several test-case reduction tools:</p>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Tool</p></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Grammar</p></th>
+<th class="head"><p>Parallel</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/comby-tools/comby-reducer">comby-reducer</a></p></td>
+<td><p>C-like</p></td>
+<td><p>n/a</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://embed.cs.utah.edu/creduce/">C-Reduce</a></p></td>
+<td><p>C</p></td>
+<td><p>n/a</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/sherfert/GTR">GTR</a></p></td>
+<td><p>not sure</p></td>
+<td><p>not sure</p></td>
+<td><p>?</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/googleprojectzero/halfempty">Halfempty</a></p></td>
+<td><p>any</p></td>
+<td><p>n/a</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/uw-pluverse/perses">Perses</a></p></td>
+<td><p>[note]</p></td>
+<td><p>ANTLR</p></td>
+<td><p>?</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/renatahodovan/picireny">Picireny</a></p></td>
+<td><p>any</p></td>
+<td><p>ANTLR</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">treereduce</span></code></p></td>
+<td><p>any</p></td>
+<td><p>tree-sitter</p></td>
+<td><p>✅</p></td>
+</tr>
+</tbody>
+</table>
+<p>[note]: Perses supports the following languages:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/googleprojectzero/halfempty">Halfempty</a></p></li>
-<li><p><a class="reference external" href="https://github.com/comby-tools/comby-reducer">comby-reducer</a></p></li>
-<li><p><a class="reference external" href="https://github.com/uw-pluverse/perses">Perses</a></p></li>
-<li><p><a class="reference external" href="https://github.com/renatahodovan/picireny">Picireny</a></p></li>
-<li><p><a class="reference external" href="https://github.com/sherfert/GTR">GTR</a></p></li>
+<li><p>C</p></li>
+<li><p>Rust</p></li>
+<li><p>Java 8</p></li>
+<li><p>Go</p></li>
+<li><p>System Verilog</p></li>
 </ul>
 </div>
 <div class="section" id="faq">
