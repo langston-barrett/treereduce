@@ -12,12 +12,10 @@
 - **Easy to set up**: `treereduce` reducers are distributed as static binaries.
 - **Multi-language**: `treereduce` currently supports the following languages:
 
-  * C
-  * C++
-
-```{warning}
-TODO([#13][#13])
-```
+  - C
+  - Java
+  - Rust
+  - [Soufflé][souffle]
 
 ## Comparison to Other Tools
 
@@ -41,7 +39,7 @@ The following table lists several test-case reduction tools:
 | [Halfempty][halfempty]           | any      | n/a         | ✅       |
 | [Perses][perses]                 | \[note\] | ANTLR       | ?        |
 | [Picireny][picireny]             | any      | ANTLR       | ✅       |
-| `treereduce`                     | any      | tree-sitter | ✅       |
+| `treereduce`                     | \[note\] | tree-sitter | ✅       |
 
 \[note\]: Perses supports the following languages:
 
@@ -51,9 +49,12 @@ The following table lists several test-case reduction tools:
 - Go
 - System Verilog
 
-[creduce]: https://embed.cs.utah.edu/creduce/
-[halfempty]: https://github.com/googleprojectzero/halfempty
+`treereduce` currently supports the languages listed above.
+
 [comby-reducer]: https://github.com/comby-tools/comby-reducer
+[creduce]: https://embed.cs.utah.edu/creduce/
+[gtr]: https://github.com/sherfert/GTR
+[halfempty]: https://github.com/googleprojectzero/halfempty
 [perses]: https://github.com/uw-pluverse/perses
 [picireny]: https://github.com/renatahodovan/picireny
-[gtr]: https://github.com/sherfert/GTR
+[souffle]: https://souffle-lang.github.io/index.html

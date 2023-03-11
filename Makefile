@@ -28,6 +28,9 @@ build:
 static:
 	$(CARGO) build $(CARGO_FLAGS) \
 	  --bin treereduce-c \
+	  --bin treereduce-java \
+	  --bin treereduce-rust \
+	  --bin treereduce-souffle \
 	  --release \
 	  --target=x86_64-unknown-linux-musl
 

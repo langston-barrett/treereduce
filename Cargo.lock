@@ -508,16 +508,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tree-sitter-cpp"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a869e3c5cef4e5db4e9ab16a8dc84d73010e60ada14cdc60d2f6d8aed17779d"
-dependencies = [
- "cc",
- "tree-sitter",
-]
-
-[[package]]
 name = "tree-sitter-edit"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -530,6 +520,26 @@ dependencies = [
 name = "tree-sitter-java"
 version = "0.20.0"
 source = "git+https://github.com/tree-sitter/tree-sitter-java#09d650def6cdf7f479f4b78f595e9ef5b58ce31e"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
+name = "tree-sitter-rust"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "797842733e252dc11ae5d403a18060bf337b822fc2ae5ddfaa6ff4d9cc20bda6"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
+name = "tree-sitter-souffle"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10f4f25aa2790a524866eac9f872de86b8bbc01412f39402c2cef3b9fe1dff8b"
 dependencies = [
  "cc",
  "tree-sitter",
@@ -569,11 +579,29 @@ dependencies = [
 ]
 
 [[package]]
-name = "treereduce-cpp"
+name = "treereduce-java"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "tree-sitter-cpp",
+ "tree-sitter-java",
+ "treereduce",
+]
+
+[[package]]
+name = "treereduce-rust"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "tree-sitter-rust",
+ "treereduce",
+]
+
+[[package]]
+name = "treereduce-souffle"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "tree-sitter-souffle",
  "treereduce",
 ]
 

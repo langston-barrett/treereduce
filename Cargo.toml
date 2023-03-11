@@ -1,9 +1,10 @@
-[workspace]
-
+[workspace] 
 members = [
     "crates/treereduce",
     "crates/treereduce-c",
-    "crates/treereduce-cpp",
+    "crates/treereduce-java",
+    "crates/treereduce-rust",
+    "crates/treereduce-souffle",
 ]
 
 # https://nnethercote.github.io/perf-book/build-configuration.html

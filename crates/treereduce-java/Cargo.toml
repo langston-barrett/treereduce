@@ -1,8 +1,8 @@
 [package]
-name = "treereduce-cpp"
-description = "Fast, parallel, syntax-aware program reducer for C++"
+name = "treereduce-java"
+description = "Fast, parallel, syntax-aware program reducer for Java"
 version = "0.0.0"
-keywords = ["program-reducer", "test-case-minimization", "test-case-reduction", "c++"]
+keywords = ["program-reducer", "test-case-minimization", "test-case-reduction", "java"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"
@@ -11,6 +11,6 @@ homepage = "https://github.com/langston-barrett/treereduce"
 repository = "https://github.com/langston-barrett/treereduce"
 
 [dependencies]
-anyhow = "1.0"
+anyhow = "1"
 treereduce = { version = "0.0.0", path = "../treereduce", features = ["cli"] }
-tree-sitter-cpp = "0.20"
+tree-sitter-java = { version = "0.20", git = 'https://github.com/tree-sitter/tree-sitter-java' }
