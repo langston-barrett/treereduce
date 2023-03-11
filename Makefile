@@ -31,6 +31,7 @@ static:
 	  --bin treereduce-java \
 	  --bin treereduce-rust \
 	  --bin treereduce-souffle \
+	  --locked \
 	  --release \
 	  --target=x86_64-unknown-linux-musl
 
