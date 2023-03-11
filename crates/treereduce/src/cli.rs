@@ -37,6 +37,7 @@ impl std::fmt::Display for OnParseError {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for OnParseError {
     fn default() -> Self {
         OnParseError::Warn
