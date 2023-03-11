@@ -19,8 +19,8 @@ pub enum Oracle {
     True,
 }
 
-const FALSE: &str = "/nix/store/i9q0jv6qnvg7zal98rqi7aq31k3p89hw-coreutils-9.0/bin/false";
-const TRUE: &str = "/nix/store/i9q0jv6qnvg7zal98rqi7aq31k3p89hw-coreutils-9.0/bin/true";
+const FALSE: &str = "scripts/false.sh";
+const TRUE: &str = "scripts/true.sh";
 const DEBUG: bool = true;
 
 impl Oracle {
@@ -216,14 +216,21 @@ impl Tool {
                 if DEBUG {
                     eprintln!("Running:\npicireny {}", args.join(" "));
                 }
-                Command::new("picireny")
+                let out = Command::new("picireny")
                     .args(args)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
                     .spawn()
                     .context("Failed to spawn picireny")?
                     .wait_with_output()
-                    .context("Failed to spawn picireny")
+                    .context("Failed to spawn picireny")?;
+                // This isn't 100% fair to Picireny, in that the time to copy
+                // the file is counted against it. OTOH, it should be quite
+                // low, and Picireny should probably provide an output option
+                // anyway.
+                let reduced = dir.path().join(in_file.file_name().unwrap());
+                std::fs::copy(reduced, OUT_FILE).unwrap();
+                Ok(out)
             }
             Tool::Treereduce => {
                 let path = &in_file.to_string_lossy();
@@ -269,6 +276,9 @@ impl std::fmt::Display for Tool {
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
+    #[arg(long, default_values_t = vec![Config::Default], value_name = "CONF")]
+    pub config: Vec<Config>,
+
     #[arg(long, default_value_t = Oracle::False)]
     pub oracle: Oracle,
 
@@ -280,9 +290,6 @@ pub struct Args {
 
     #[arg(long, default_value_t = String::from("<unknown>"))]
     pub tool_version: String,
-
-    #[arg(long, default_values_t = vec![Config::Default], value_name = "CONF")]
-    pub config: Vec<Config>,
 
     #[arg(long, default_value_t = 1)]
     pub trials: usize,
