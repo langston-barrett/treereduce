@@ -51,36 +51,6 @@ The following table lists several test-case reduction tools:
 - Go
 - System Verilog
 
-## FAQ
-
-### How can I get results faster?
-
-Try `--fast`. If that's not fast enough, read on.
-
-The following tips are in order of descending utility, the last few will
-technically make things a bit faster but the gains will be very minor.
-
-- Try `--passes 1`.
-- Set `--jobs` to something close to your number of CPU cores.
-<!-- TODO(#6): --interesting-stdout-regex -->
-- Pass the input to your program on stdin instead of via a file. If your program
-  must take a file, put it on a tmpfs.
-- Avoid using a script to wrap your interestingness test if you can, using
-  `--interesting-exit-code` instead.
-- For really slow tests, use `--no-verify` once you've set up your
-  interestingness test.
-- If the input file is generated, pass it to `treereduce` on stdin.
-- If you don't need the output to be a file, pass `--output -` to get output on
-  stdout.
-
-### How can I get smaller tests?
-
-Try `--slow`. If that's not small enough, read on.
-
-- Use `--stable`. If that's too slow, increase `--passes`.
-- Set `--min-reduction 1`.
-- Run [Halfempty][halfempty] or another test-case reducer on the output.
-
 [creduce]: https://embed.cs.utah.edu/creduce/
 [halfempty]: https://github.com/googleprojectzero/halfempty
 [comby-reducer]: https://github.com/comby-tools/comby-reducer

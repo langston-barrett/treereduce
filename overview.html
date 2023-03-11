@@ -287,23 +287,6 @@ title="Print to PDF"
    Comparison to Other Tools
   </a>
  </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#faq">
-   FAQ
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#how-can-i-get-results-faster">
-     How can I get results faster?
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#how-can-i-get-smaller-tests">
-     How can I get smaller tests?
-    </a>
-   </li>
-  </ul>
- </li>
 </ul>
 
     </nav>
@@ -332,23 +315,6 @@ title="Print to PDF"
   <a class="reference internal nav-link" href="#comparison-to-other-tools">
    Comparison to Other Tools
   </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#faq">
-   FAQ
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#how-can-i-get-results-faster">
-     How can I get results faster?
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#how-can-i-get-smaller-tests">
-     How can I get smaller tests?
-    </a>
-   </li>
-  </ul>
  </li>
 </ul>
 
@@ -449,40 +415,6 @@ sitter grammars (making them unable to mutate malformed inputs). The goal of
 <li><p>Go</p></li>
 <li><p>System Verilog</p></li>
 </ul>
-</div>
-<div class="section" id="faq">
-<h2>FAQ<a class="headerlink" href="#faq" title="Permalink to this headline">#</a></h2>
-<div class="section" id="how-can-i-get-results-faster">
-<h3>How can I get results faster?<a class="headerlink" href="#how-can-i-get-results-faster" title="Permalink to this headline">#</a></h3>
-<p>Try <code class="docutils literal notranslate"><span class="pre">--fast</span></code>. If that’s not fast enough, read on.</p>
-<p>The following tips are in order of descending utility, the last few will
-technically make things a bit faster but the gains will be very minor.</p>
-<ul class="simple">
-<li><p>Try <code class="docutils literal notranslate"><span class="pre">--passes</span> <span class="pre">1</span></code>.</p></li>
-<li><p>Set <code class="docutils literal notranslate"><span class="pre">--jobs</span></code> to something close to your number of CPU cores.</p></li>
-</ul>
-<!-- TODO(#6): --interesting-stdout-regex -->
-<ul class="simple">
-<li><p>Pass the input to your program on stdin instead of via a file. If your program
-must take a file, put it on a tmpfs.</p></li>
-<li><p>Avoid using a script to wrap your interestingness test if you can, using
-<code class="docutils literal notranslate"><span class="pre">--interesting-exit-code</span></code> instead.</p></li>
-<li><p>For really slow tests, use <code class="docutils literal notranslate"><span class="pre">--no-verify</span></code> once you’ve set up your
-interestingness test.</p></li>
-<li><p>If the input file is generated, pass it to <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> on stdin.</p></li>
-<li><p>If you don’t need the output to be a file, pass <code class="docutils literal notranslate"><span class="pre">--output</span> <span class="pre">-</span></code> to get output on
-stdout.</p></li>
-</ul>
-</div>
-<div class="section" id="how-can-i-get-smaller-tests">
-<h3>How can I get smaller tests?<a class="headerlink" href="#how-can-i-get-smaller-tests" title="Permalink to this headline">#</a></h3>
-<p>Try <code class="docutils literal notranslate"><span class="pre">--slow</span></code>. If that’s not small enough, read on.</p>
-<ul class="simple">
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">--stable</span></code>. If that’s too slow, increase <code class="docutils literal notranslate"><span class="pre">--passes</span></code>.</p></li>
-<li><p>Set <code class="docutils literal notranslate"><span class="pre">--min-reduction</span> <span class="pre">1</span></code>.</p></li>
-<li><p>Run <a class="reference external" href="https://github.com/googleprojectzero/halfempty">Halfempty</a> or another test-case reducer on the output.</p></li>
-</ul>
-</div>
 </div>
 </div>
 
