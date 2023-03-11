@@ -12,10 +12,11 @@ here's how to reduce a C program while making sure it still compiles with
 `clang`:
 
 ```sh
-treereduce-c --output program-reduced.c -s program.c -- clang -o /dev/null @@.c
+treereduce-c -s program.c -- clang -o /dev/null @@.c
 ```
 
-See `--help` for more information.
+By default, the resulting file is saved to `treereduce.out`; this can be
+changed with `--output`. See `--help` for more information.
 
 ## Getting results faster
 

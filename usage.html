@@ -338,10 +338,11 @@ command-line argument. In the latter case, the special symbol <code class="docut
 command line tells <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> how to provide the file path. For example,
 here’s how to reduce a C program while making sure it still compiles with
 <code class="docutils literal notranslate"><span class="pre">clang</span></code>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>treereduce-c --output program-reduced.c -s program.c -- clang -o /dev/null @@.c
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>treereduce-c -s program.c -- clang -o /dev/null @@.c
 </pre></div>
 </div>
-<p>See <code class="docutils literal notranslate"><span class="pre">--help</span></code> for more information.</p>
+<p>By default, the resulting file is saved to <code class="docutils literal notranslate"><span class="pre">treereduce.out</span></code>; this can be
+changed with <code class="docutils literal notranslate"><span class="pre">--output</span></code>. See <code class="docutils literal notranslate"><span class="pre">--help</span></code> for more information.</p>
 <div class="section" id="getting-results-faster">
 <h2>Getting results faster<a class="headerlink" href="#getting-results-faster" title="Permalink to this headline">#</a></h2>
 <p>Try <code class="docutils literal notranslate"><span class="pre">--fast</span></code>. If that’s not fast enough, read on.</p>
