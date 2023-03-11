@@ -73,5 +73,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: Swatinem/rust-cache@ce325b60658c1b38465c06cc965b79baf32c1e72
     - run: make build
     - run: make test
