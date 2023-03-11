@@ -15,6 +15,7 @@ use clap::Parser;
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum Oracle {
     Clang,
+    ClangWerror,
     False,
     True,
 }
@@ -31,12 +32,20 @@ impl Oracle {
                     "./crates/treereduce/examples/scripts/clang-creduce.sh".to_string(),
                     vec![],
                 ),
+                Oracle::ClangWerror => (
+                    "./crates/treereduce/examples/scripts/clang-werror-creduce.sh".to_string(),
+                    vec![],
+                ),
                 Oracle::False => (FALSE.to_string(), vec![]),
                 Oracle::True => (TRUE.to_string(), vec![]),
             },
             Tool::Halfempty => match self {
                 Oracle::Clang => (
                     "./crates/treereduce/examples/scripts/clang-halfempty.sh".to_string(),
+                    vec![],
+                ),
+                Oracle::ClangWerror => (
+                    "./crates/treereduce/examples/scripts/clang-werror-halfempty.sh".to_string(),
                     vec![],
                 ),
                 Oracle::True => (TRUE.to_string(), vec![]),
@@ -47,6 +56,10 @@ impl Oracle {
                     "./crates/treereduce/examples/scripts/clang-picireny.sh".to_string(),
                     vec![],
                 ),
+                Oracle::ClangWerror => (
+                    "./crates/treereduce/examples/scripts/clang-werror-picireny.sh".to_string(),
+                    vec![],
+                ),
                 Oracle::False => (FALSE.to_string(), vec![]),
                 Oracle::True => (TRUE.to_string(), vec![]),
             },
@@ -54,6 +67,15 @@ impl Oracle {
                 Oracle::Clang => (
                     "clang".to_string(),
                     vec![
+                        "-o".to_string(),
+                        "/dev/null".to_string(),
+                        "@@.c".to_string(),
+                    ],
+                ),
+                Oracle::ClangWerror => (
+                    "clang".to_string(),
+                    vec![
+                        "-Werror".to_string(),
                         "-o".to_string(),
                         "/dev/null".to_string(),
                         "@@.c".to_string(),
@@ -70,6 +92,7 @@ impl std::fmt::Display for Oracle {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Oracle::Clang => write!(f, "clang"),
+            Oracle::ClangWerror => write!(f, "clang-werror"),
             Oracle::False => write!(f, "false"),
             Oracle::True => write!(f, "true"),
         }
