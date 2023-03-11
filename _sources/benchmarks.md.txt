@@ -21,34 +21,10 @@ C program. The "interestingness test" is whether the program still compiles.
 
 The following plots shows the time taken by the different tools (in
 milliseconds), and the resulting program size (lower is better). They show that
-`treereduce` is fastest by a wide margin (about 6x), though it produces the
-worst output (on par with Halfempty).
+`treereduce` is fastest, though Picireny produces better output.
 
 ![Time taken by each tool to reduce the "basic" program](img/basic-time.svg)
 ![Size of final test case produced by each tool on "basic" program](img/basic-size.svg)
-
-Here are the reduced programs:
-
-```c
-// Original
-#include <stdio.h>
-int main(int argc, char *argv[]) {
-  puts("Hello, world!\n");
-  return 0;
-}
-
-// Halfempty
-main(int,char*[]){puts();}
-
-// Picireny
-main(a) { }
-
-// treereduce
-int main(int argc, char *argv[]) {
-
-
-}
-```
 
 ## Pre-processed "Hello, world!"
 
