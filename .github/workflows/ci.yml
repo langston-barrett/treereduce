@@ -40,7 +40,7 @@ jobs:
 
     - name: Upload docs
       uses: actions/upload-artifact@v3
-      if: github.repository == 'langston-barrett/treedd'
+      if: github.repository == 'langston-barrett/treereduce'
       with:
         name: "${{ env.NAME }}-docs"
         path: "*.tar.gz"
