@@ -20,8 +20,9 @@ This benchmark involves running each tool with its default settings on a small
 C program. The "interestingness test" is whether the program still compiles.
 
 The following plots shows the time taken by the different tools (in
-milliseconds), and the resulting program size (lower is better). They show that
-`treereduce` is fastest and produces the best output.
+milliseconds), and the resulting program size (lower is better). They show
+that `treereduce` is fastest, though Picireny produces better output (by a
+few bytes).
 
 ![Time taken by each tool to reduce the "basic" program](img/basic-time.svg)
 ![Size of final test case produced by each tool on "basic" program](img/basic-size.svg)
