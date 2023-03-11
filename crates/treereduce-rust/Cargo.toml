@@ -1,16 +1,16 @@
 [package]
 name = "treereduce-rust"
 description = "Fast, parallel, syntax-aware program reducer for Rust"
-version = "0.0.0"
+version = "0.1.0"
 keywords = ["program-reducer", "test-case-minimization", "test-case-reduction", "rust"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"
-readme = "README.md"
+readme = "../../README.md"
 homepage = "https://github.com/langston-barrett/treereduce"
 repository = "https://github.com/langston-barrett/treereduce"
 
 [dependencies]
 anyhow = "1.0"
-treereduce = { version = "0.0.0", path = "../treereduce", features = ["cli"] }
+treereduce = { version = "0.1.0", path = "../treereduce", features = ["cli"] }
 tree-sitter-rust = "0.20"
