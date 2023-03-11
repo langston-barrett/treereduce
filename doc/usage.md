@@ -1,10 +1,47 @@
 # Usage
 
-TODO([#14][#14])
+`treereduce` needs a *testcase* and an *interestingness test*.  The test
+case can be provided on stdin or via a file with `--source` (`-s`). The
+interestingness test is an executable (or script) that exits with 0 if the test
+is still interesting, or with any other code otherwise. The interestingness
+test is provided on the `treereduce` command line after a `--`. It can either
+receive the partially-reduced program on stdin, or via a file provided as
+command-line argument. In the latter case, the special symbol `@@` in the
+command line tells `treereduce` how to provide the file path. For example,
+here's how to reduce a C program while making sure it still compiles with
+`clang`:
 
-<!-- TODO(lb): Cover @@ -->
-<!-- TODO(lb): Cover interestingness tests -->
-<!-- TODO(lb): Cover --interesting-exit-code -->
-<!-- TODO(lb): Example: - -s ./basic.c -- clang -o /dev/null @@.c -->
+```sh
+treereduce-c -s program.c -- clang -o /dev/null @@.c
+```
 
-[#14]: https://github.com/langston-barrett/treereduce/issues/14
+By default, the resulting file is saved to `treereduce.out`; this can be
+changed with `--output`. See `--help` for more information.
+
+## Getting results faster
+
+Try `--fast`. If that's not fast enough, read on.
+
+The following tips are in order of descending utility, the last few will
+technically make things a bit faster but the gains will be very minor.
+
+- Try `--passes 1`.
+- Set `--jobs` to something close to your number of CPU cores.
+<!-- TODO(#6): --interesting-stdout-regex -->
+- Pass the input to your program on stdin instead of via a file. If your program
+  must take a file, put it on a tmpfs.
+- Avoid using a script to wrap your interestingness test if you can, using
+  `--interesting-exit-code` instead.
+- For really slow tests, use `--no-verify` once you've set up your
+  interestingness test.
+- If the input file is generated, pass it to `treereduce` on stdin.
+- If you don't need the output to be a file, pass `--output -` to get output on
+  stdout.
+
+## Getting smaller tests
+
+Try `--slow`. If that's not small enough, read on.
+
+- Use `--stable`. If that's too slow, increase `--passes`.
+- Set `--min-reduction 1`.
+- Run [Halfempty][halfempty] or another test-case reducer on the output.
