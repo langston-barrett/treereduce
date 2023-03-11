@@ -18,12 +18,21 @@ impl Pass {
         writeln!(
             w,
             "Reduction  : {:.2}%",
-            100.0 - ((self.end_size as f64 / self.start_size as f64) * 100.0)
+            if self.start_size != 0 {
+                100.0 - ((self.end_size as f64 / self.start_size as f64) * 100.0)
+            } else {
+                0.0
+            }
         )?;
         writeln!(
             w,
             "Bytes/sec  : {:.2}",
-            ((self.start_size - self.end_size) as f64 / self.duration.as_millis() as f64) * 1000.0
+            if self.duration.as_millis() != 0 {
+                ((self.start_size - self.end_size) as f64 / self.duration.as_millis() as f64)
+                    * 1000.0
+            } else {
+                0.0
+            }
         )?;
         Ok(())
     }

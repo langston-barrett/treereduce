@@ -148,7 +148,12 @@ impl Tool {
             Tool::Creduce => {
                 assert!(test_args.is_empty());
                 args.extend(vec![
-                    "--n", j, "--tidy", test_bin,
+                    "--also-interesting",
+                    "1",
+                    "--n",
+                    j,
+                    "--tidy",
+                    test_bin,
                     OUT_FILE, // creduce outputs to the input file
                 ]);
                 if DEBUG {

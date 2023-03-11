@@ -238,10 +238,9 @@ fn edits(
     let tree = parse(language, src)?;
     handle_parse_errors(src_path, &tree, &args.on_parse_error);
     let node_types = crate::node_types::NodeTypes::new(node_types_json_str)?;
-    let tree2 = tree.clone();
-    let orig = Original::new(tree, src.as_bytes().to_vec());
-    let edits = crate::reduce::treereduce(node_types, orig, conf)?;
-    Ok((tree2, edits))
+    let orig0 = Original::new(tree, src.as_bytes().to_vec());
+    let (orig, edits) = crate::reduce::treereduce(node_types, orig0, conf)?;
+    Ok((orig.tree, edits))
 }
 
 #[inline]

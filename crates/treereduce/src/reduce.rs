@@ -518,7 +518,11 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     node_types: NodeTypes,
     orig: Original,
     conf: Config<T>,
-) -> Result<Edits, ReductionError> {
+) -> Result<(Original, Edits), ReductionError> {
+    if orig.text.is_empty() {
+        return Ok((orig, Edits::new()));
+    }
+
     let _span = debug_span!("Pass");
     info!("Original size: {}", orig.text.len());
     // TODO(#25): SIGHUP handler to save intermediate progress
@@ -563,5 +567,5 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     let ctx = Arc::try_unwrap(ctx).expect("Multiple references!");
     debug_assert!(ctx.tasks.heap.read()?.is_empty());
     let edits = ctx.edits.read()?.clone();
-    Ok(edits.extract())
+    Ok((ctx.orig, edits.extract()))
 }
