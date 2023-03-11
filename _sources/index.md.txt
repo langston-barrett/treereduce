@@ -10,11 +10,6 @@ See the {doc}`overview` for more information, or get started right away with
 
 Source available [on Github][src].
 
-```{warning}
-`treereduce` is **alpha-quality** software. Some parts of the documentation are
-currently aspirational---these are marked with TODOs and linked issues.
-```
-
 ```{toctree}
 :caption: User Guide
 
