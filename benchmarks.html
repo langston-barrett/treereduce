@@ -278,21 +278,19 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#time-and-quality">
-   Time and quality
+  <a class="reference internal nav-link" href="#basic-program">
+   Basic program
   </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#basic-program">
-     Basic program
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pre-processed-hello-world">
-     Pre-processed “Hello, world!”
-    </a>
-   </li>
-  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#pre-processed-hello-world">
+   Pre-processed “Hello, world!”
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#best-case">
+   Best case
+  </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#worst-case">
@@ -324,21 +322,19 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#time-and-quality">
-   Time and quality
+  <a class="reference internal nav-link" href="#basic-program">
+   Basic program
   </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#basic-program">
-     Basic program
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pre-processed-hello-world">
-     Pre-processed “Hello, world!”
-    </a>
-   </li>
-  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#pre-processed-hello-world">
+   Pre-processed “Hello, world!”
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#best-case">
+   Best case
+  </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#worst-case">
@@ -362,46 +358,71 @@ title="Print to PDF"
                 
   <div class="section" id="benchmarks">
 <h1>Benchmarks<a class="headerlink" href="#benchmarks" title="Permalink to this headline">#</a></h1>
-<p>The following benchmarks compare C-reduce, Halfempty, Picireny, and
-<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> on C and C++ source code; see <a class="reference internal" href="overview.html"><span class="doc">the overview</span></a> for
-general a general comparison of these tools.</p>
-<p>As discussed in the overview, one would generally expect that, as the most
-specialized tool, C-reduce will produce the smallest (highest-quality) outputs,
-with Picireny and <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> trailing it and Halfempty last.</p>
+<p>The following benchmarks compare Halfempty, Picireny, and <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> on C
+and C++ source code; see <a class="reference internal" href="overview.html"><span class="doc">the overview</span></a> for general a general
+comparison of these tools.</p>
+<p>As discussed in the overview, one would generally expect that, as the more
+specialized tools, Picireny and <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> will produce the smallest
+(highest-quality) outputs, with Halfempty last.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>I am not an expert on many of the tools included in these benchmarks. I have
 tried my best to understand them, but there may be more effective ways of using
 them that would lead to better results.</p>
 </div>
-<div class="section" id="time-and-quality">
-<h2>Time and quality<a class="headerlink" href="#time-and-quality" title="Permalink to this headline">#</a></h2>
 <div class="section" id="basic-program">
-<h3>Basic program<a class="headerlink" href="#basic-program" title="Permalink to this headline">#</a></h3>
+<h2>Basic program<a class="headerlink" href="#basic-program" title="Permalink to this headline">#</a></h2>
 <p>This benchmark involves running each tool with its default settings on a small
 C program. The “interestingness test” is whether the program still compiles.</p>
 <p>The following plots shows the time taken by the different tools (in
 milliseconds), and the resulting program size (lower is better). They show that
-<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is fastest, and produces the second-smallest (best) output file.</p>
+<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is fastest by a wide margin (about 6x), though it produces the
+worst output (on par with Halfempty).</p>
 <p><img alt="Time taken by each tool to reduce the &quot;basic&quot; program" src="_images/basic-time.svg" />
 <img alt="Size of final test case produced by each tool on &quot;basic&quot; program" src="_images/basic-size.svg" /></p>
+<p>Here are the reduced programs:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// Original</span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">&quot;Hello, world!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Halfempty</span>
+<span class="n">main</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="kt">char</span><span class="o">*</span><span class="p">[]){</span><span class="n">puts</span><span class="p">();}</span>
+
+<span class="c1">// Picireny</span>
+<span class="n">main</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+
+<span class="c1">// treereduce</span>
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+
+
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="pre-processed-hello-world">
-<h3>Pre-processed “Hello, world!”<a class="headerlink" href="#pre-processed-hello-world" title="Permalink to this headline">#</a></h3>
+<h2>Pre-processed “Hello, world!”<a class="headerlink" href="#pre-processed-hello-world" title="Permalink to this headline">#</a></h2>
 <p>This benchmark involves running each tool with its default settings on a “hello
 world” program, after running the C pre-processor. The “interestingness test”
 is whether the program still compiles.</p>
 <p>With a timeout of 300s, only <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> was able to complete this task. It
 reduced the file size from 35123 to 4769 bytes.</p>
 </div>
+<div class="section" id="best-case">
+<h2>Best case<a class="headerlink" href="#best-case" title="Permalink to this headline">#</a></h2>
+<p>This benchmark involves running each tool with its default settings on a
+small C program. The “interestingness test” always succeeds. All reducers were
+able to reduce the test to an empty file. The chart shows that halfempty and
+<code class="docutils literal notranslate"><span class="pre">treereduce</span></code> were nearly instantaneous while Picireny took 4s.</p>
+<p><img alt="Time taken by each tool to reduce the &quot;basic&quot; program" src="_images/true-time.svg" /></p>
 </div>
 <div class="section" id="worst-case">
 <h2>Worst case<a class="headerlink" href="#worst-case" title="Permalink to this headline">#</a></h2>
-<p>This benchmark involves running each tool with its default settings on a small
-C program. The “interestingness test” always fails. C-reduce is not present,
-because it attempts to verify that the interestingness test holds true for the
-initial input; to my knowledge this behavior is not configurable. The chart
-shows that <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is the fastest, by a wide margin.</p>
+<p>This benchmark involves running each tool with its default settings on a
+small C program. The “interestingness test” always fails. The chart shows that
+halfempty and <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> finish almost instantly, but Picireny takes 2s.</p>
 <p><img alt="Time taken by each tool" src="_images/false-time.svg" /></p>
 </div>
 <div class="section" id="data-collection">
@@ -414,7 +435,7 @@ shows that <code class="docutils literal notranslate"><span class="pre">treeredu
 rm -f data.csv
 
 <span class="nb">export</span> <span class="nv">PYTHONOPTIMIZE</span><span class="o">=</span><span class="m">1</span>
-<span class="k">for</span> tool in creduce halfempty picireny treereduce<span class="p">;</span> <span class="k">do</span>
+<span class="k">for</span> tool in halfempty picireny treereduce<span class="p">;</span> <span class="k">do</span>
   timeout 300s <span class="se">\</span>
     cargo run --quiet --example bench -- <span class="se">\</span>
       --config <span class="s2">&quot;</span><span class="si">${</span><span class="nv">2</span><span class="k">:-</span><span class="nv">default</span><span class="si">}</span><span class="s2">&quot;</span> <span class="se">\</span>
