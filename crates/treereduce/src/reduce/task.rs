@@ -21,6 +21,7 @@ impl TaskId {
 pub enum Reduction {
     Delete(NodeId),
     DeleteAll(Vec<NodeId>),
+    Replace { node_id: NodeId, with: String },
     // Hoist(NodeId, NodeId),
     // Delta(NodeId),
 }
@@ -43,6 +44,7 @@ impl Task {
             Task::Explore(_) => "explore".to_string(),
             Task::Reduce(Reduction::Delete(_)) => "delete".to_string(),
             Task::Reduce(Reduction::DeleteAll(_)) => "delete_all".to_string(),
+            Task::Reduce(Reduction::Replace { .. }) => "replace".to_string(),
         }
     }
 }

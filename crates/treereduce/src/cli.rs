@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -311,22 +312,30 @@ fn init_tracing(args: &Args) {
 }
 
 #[inline]
-fn configure(args: &Args) -> reduce::Config<CmdCheck> {
+fn configure(
+    args: &Args,
+    replacements: HashMap<&'static str, &'static [&'static str]>,
+) -> reduce::Config<CmdCheck> {
     reduce::Config {
         check: check(args),
         jobs: args.jobs,
         min_reduction: min_reduction(args),
+        replacements,
     }
 }
 
-pub fn main(language: tree_sitter::Language, node_types_json_str: &'static str) -> Result<()> {
+pub fn main(
+    language: tree_sitter::Language,
+    node_types_json_str: &'static str,
+    replacements: HashMap<&'static str, &'static [&'static str]>,
+) -> Result<()> {
     let args = Args::parse();
     debug_assert!(args.passes == DEFAULT_NUM_PASSES || !args.stable);
     debug_assert!(!(args.fast && args.slow));
 
     init_tracing(&args);
     make_temp_dir(&args.temp_dir)?;
-    let conf = configure(&args);
+    let conf = configure(&args, replacements);
 
     let (path, mut src) = if let Some(p) = &args.source {
         (p.to_string(), read_file(p)?)

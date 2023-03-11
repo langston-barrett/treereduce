@@ -152,6 +152,7 @@ where
     idle: Idle,
     check: T,
     min_task_size: usize,
+    replacements: HashMap<&'static str, &'static [&'static str]>,
 }
 
 struct ThreadCtx<'a, T>
@@ -272,6 +273,9 @@ where
                 }
                 Ok(Some(edits.mutate_clone(|e| e.omit_ids(node_ids))))
             }
+            Task::Reduce(Reduction::Replace { node_id, with }) => Ok(Some(
+                edits.mutate_clone(|e| e.replace_id(*node_id, with.clone())),
+            )),
         }
     }
 
@@ -307,6 +311,11 @@ where
             //     return Ok(InterestingCheck::TryAgain);
             // }
             let (_changed, rendered) = self.render(edits.get())?;
+
+            // For debugging:
+            // let s = std::str::from_utf8(&rendered).unwrap();
+            // eprintln!("{}", s);
+
             // TODO(lb): Don't introduce parse errors
             // let reparsed = self.parse(&rendered);
             // assert!({
@@ -406,6 +415,18 @@ fn explore<T: Check + Send + Sync + 'static>(
     let node = tctx.find(&node_id);
     let _span = debug_span!("Exploring", id = node_id.get());
     debug!("Exploring {}...", tctx.find(&node_id).kind());
+    if let Some(replaces) = tctx.ctx.replacements.get(node.kind()) {
+        // TODO(lb): Benchmark locking tasks and pushing all at once
+        for replace in *replaces {
+            tctx.ctx.push_task(
+                &node,
+                Task::Reduce(Reduction::Replace {
+                    node_id,
+                    with: String::from(*replace),
+                }),
+            )?;
+        }
+    }
     if tctx.ctx.node_types.optional_node(&node) {
         tctx.ctx
             .push_task(&node, Task::Reduce(Reduction::Delete(node_id)))?;
@@ -463,6 +484,20 @@ fn dispatch<T: Check + Send + Sync + 'static>(
             let _ = tctx.ctx.interesting(&ptask);
             Ok(())
         }
+        Task::Reduce(Reduction::Replace { node_id, .. }) => {
+            let _span = debug_span!("Reducing", id = node_id.get());
+            match tctx.ctx.interesting(&ptask)? {
+                Interesting::Yes => {
+                    // This tree was replaced, no need to recurse on children
+                    Ok(())
+                }
+                Interesting::No => {
+                    tctx.ctx.push_explore_children(tctx.find(&node_id))?;
+                    Ok(())
+                }
+                Interesting::Stale => Ok(()),
+            }
+        }
     }
 }
 
@@ -512,6 +547,7 @@ pub struct Config<T> {
     pub jobs: usize,
     // TODO(lb): Maybe per-pass, benchmark
     pub min_reduction: usize,
+    pub replacements: HashMap<&'static str, &'static [&'static str]>,
 }
 
 pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
@@ -540,6 +576,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         idle: Idle::new(),
         check: conf.check,
         min_task_size: min_reduction,
+        replacements: conf.replacements,
     });
 
     let mut thread_handles = Vec::new();
