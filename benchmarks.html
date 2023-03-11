@@ -283,6 +283,16 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#basic-program-with-werror">
+   Basic program with
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     -Werror
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#pre-processed-hello-world">
    Pre-processed “Hello, world!”
   </a>
@@ -324,6 +334,16 @@ title="Print to PDF"
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#basic-program">
    Basic program
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#basic-program-with-werror">
+   Basic program with
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     -Werror
+    </span>
+   </code>
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -379,6 +399,14 @@ milliseconds), and the resulting program size (lower is better). They show that
 <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is fastest, though Picireny produces better output.</p>
 <p><img alt="Time taken by each tool to reduce the &quot;basic&quot; program" src="_images/basic-time.svg" />
 <img alt="Size of final test case produced by each tool on &quot;basic&quot; program" src="_images/basic-size.svg" /></p>
+</div>
+<div class="section" id="basic-program-with-werror">
+<h2>Basic program with <code class="docutils literal notranslate"><span class="pre">-Werror</span></code><a class="headerlink" href="#basic-program-with-werror" title="Permalink to this headline">#</a></h2>
+<p>This benchmark is the same as the last, except that the “interestingness test”
+is whether the program still compiles with <code class="docutils literal notranslate"><span class="pre">-Werror</span></code>.</p>
+<p>The plots show that <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> is fastest and produces the best output.</p>
+<p><img alt="Time taken by each tool to reduce the &quot;basic&quot; program" src="_images/basic-werror-time.svg" />
+<img alt="Size of final test case produced by each tool on &quot;basic&quot; program" src="_images/basic-werror-size.svg" /></p>
 </div>
 <div class="section" id="pre-processed-hello-world">
 <h2>Pre-processed “Hello, world!”<a class="headerlink" href="#pre-processed-hello-world" title="Permalink to this headline">#</a></h2>

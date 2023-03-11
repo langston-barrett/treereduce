@@ -26,6 +26,16 @@ milliseconds), and the resulting program size (lower is better). They show that
 ![Time taken by each tool to reduce the "basic" program](img/basic-time.svg)
 ![Size of final test case produced by each tool on "basic" program](img/basic-size.svg)
 
+## Basic program with `-Werror`
+
+This benchmark is the same as the last, except that the "interestingness test"
+is whether the program still compiles with `-Werror`.
+
+The plots show that `treereduce` is fastest and produces the best output.
+
+![Time taken by each tool to reduce the "basic" program](img/basic-werror-time.svg)
+![Size of final test case produced by each tool on "basic" program](img/basic-werror-size.svg)
+
 ## Pre-processed "Hello, world!"
 
 This benchmark involves running each tool with its default settings on a "hello
