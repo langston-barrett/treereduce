@@ -2,7 +2,7 @@
 name = "treereduce-souffle"
 description = "Fast, parallel, syntax-aware program reducer for Soufflé"
 version = "0.1.0"
-keywords = ["program-reducer", "test-case-minimization", "test-case-reduction", "souffle"]
+keywords = ["program-reducer", "minimization", "test-case-reduction", "souffle"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"

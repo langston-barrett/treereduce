@@ -2,7 +2,7 @@
 name = "treereduce"
 description = "Fast, syntax-aware, multi-language program reducer based on delta debugging"
 version = "0.1.0"
-keywords = ["program-reducer", "test-case-minimization", "test-case-reduction"]
+keywords = ["program-reducer", "minimization", "test-case-reduction"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"
