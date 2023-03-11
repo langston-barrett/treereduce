@@ -1,10 +1,18 @@
 # Usage
 
-TODO([#14][#14])
+`treereduce` needs a *testcase* and an *interestingness test*.  The test
+case can be provided on stdin or via a file with `--source` (`-s`). The
+interestingness test is an executable (or script) that exits with 0 if the test
+is still interesting, or with any other code otherwise. The interestingness
+test is provided on the `treereduce` command line after a `--`. It can either
+receive the partially-reduced program on stdin, or via a file provided as
+command-line argument. In the latter case, the special symbol `@@` in the
+command line tells `treereduce` how to provide the file path. For example,
+here's how to reduce a C program while making sure it still compiles with
+`clang`:
 
-<!-- TODO(lb): Cover @@ -->
-<!-- TODO(lb): Cover interestingness tests -->
-<!-- TODO(lb): Cover --interesting-exit-code -->
-<!-- TODO(lb): Example: - -s ./basic.c -- clang -o /dev/null @@.c -->
+```sh
+treereduce-c --output program-reduced.c -s program.c -- clang -o /dev/null @@.c
+```
 
-[#14]: https://github.com/langston-barrett/treereduce/issues/14
+See `--help` for more information.

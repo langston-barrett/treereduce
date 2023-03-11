@@ -281,11 +281,20 @@ title="Print to PDF"
                 
   <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">#</a></h1>
-<p>TODO(<a class="reference external" href="https://github.com/langston-barrett/treereduce/issues/14">#14</a>)</p>
-<!-- TODO(lb): Cover @@ -->
-<!-- TODO(lb): Cover interestingness tests -->
-<!-- TODO(lb): Cover --interesting-exit-code -->
-<!-- TODO(lb): Example: - -s ./basic.c -- clang -o /dev/null @@.c -->
+<p><code class="docutils literal notranslate"><span class="pre">treereduce</span></code> needs a <em>testcase</em> and an <em>interestingness test</em>.  The test
+case can be provided on stdin or via a file with <code class="docutils literal notranslate"><span class="pre">--source</span></code> (<code class="docutils literal notranslate"><span class="pre">-s</span></code>). The
+interestingness test is an executable (or script) that exits with 0 if the test
+is still interesting, or with any other code otherwise. The interestingness
+test is provided on the <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> command line after a <code class="docutils literal notranslate"><span class="pre">--</span></code>. It can either
+receive the partially-reduced program on stdin, or via a file provided as
+command-line argument. In the latter case, the special symbol <code class="docutils literal notranslate"><span class="pre">&#64;&#64;</span></code> in the
+command line tells <code class="docutils literal notranslate"><span class="pre">treereduce</span></code> how to provide the file path. For example,
+here’s how to reduce a C program while making sure it still compiles with
+<code class="docutils literal notranslate"><span class="pre">clang</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>treereduce-c --output program-reduced.c -s program.c -- clang -o /dev/null @@.c
+</pre></div>
+</div>
+<p>See <code class="docutils literal notranslate"><span class="pre">--help</span></code> for more information.</p>
 </div>
 
 
