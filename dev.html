@@ -282,6 +282,11 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#testing">
+   Testing
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#tuning">
    Tuning
   </a>
@@ -328,6 +333,11 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#testing">
+   Testing
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#tuning">
    Tuning
   </a>
@@ -365,6 +375,14 @@ title="Print to PDF"
 <div class="section" id="tools">
 <h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">#</a></h2>
 <p>In addition to Cargo and rustc, you’ll need <code class="docutils literal notranslate"><span class="pre">clippy</span></code> to lint your code.</p>
+</div>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">#</a></h2>
+<p>Tested with <code class="docutils literal notranslate"><span class="pre">lit</span></code> and <code class="docutils literal notranslate"><span class="pre">FileCheck</span> </code>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cargo build
+lit --path<span class="o">=</span><span class="nv">$PWD</span>/test/bin --path<span class="o">=</span><span class="nv">$PWD</span>/target/debug test/
+</pre></div>
+</div>
 </div>
 <div class="section" id="tuning">
 <h2>Tuning<a class="headerlink" href="#tuning" title="Permalink to this headline">#</a></h2>
