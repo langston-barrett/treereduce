@@ -1,4 +1,4 @@
-// RUN: treereduce-c -q -j 1 -o - -s %s -- grep "retain" 2>&1 | FileCheck %s
+// RUN: treereduce-c -q -j 1 -o - -s %s -- grep "retained" 2>&1 | FileCheck %s
 
 // CHECK: retain
 // This comment should be retained.

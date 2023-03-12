@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# This script is used in place of `grep` in interestingness tests to avoid
+# erroneously matching comments in FileCheck output.
+
+grep -E -v '^//' | grep "${@}"
