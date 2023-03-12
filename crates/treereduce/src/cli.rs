@@ -214,7 +214,12 @@ fn check(args: &Args) -> CmdCheck {
     )
 }
 
-fn check_initial_input_is_interesting(chk: &CmdCheck, tree: &Tree, src: &[u8]) -> Result<()> {
+fn check_initial_input_is_interesting(
+    chk: &CmdCheck,
+    tree: &Tree,
+    src: &[u8],
+    source: &Option<String>,
+) -> Result<()> {
     let mut test: Vec<u8> = Vec::new();
     test.reserve(src.len());
     tree_sitter_edit::render(&mut test, tree, src, &crate::edits::Edits::new())?;
@@ -222,7 +227,42 @@ fn check_initial_input_is_interesting(chk: &CmdCheck, tree: &Tree, src: &[u8]) -
         .interesting(&test)
         .context("Failed to check that initial input was interesting")?
     {
-        error!("Initial test was not interesting. See the usage documentation for help: https://langston-barrett.github.io/treereduce/usage.html");
+        let (tmp_file, command_line) = if chk.needs_file {
+            chk.args_with_file()?
+        } else {
+            (None, chk.args.clone())
+        };
+        let tmp_path = match tmp_file {
+            Some(t) => String::from(t.path().to_string_lossy()),
+            None => String::from("${tmp}/your-test-case"),
+        };
+        let mut args = command_line
+            .iter()
+            .map(|s| format!("\"{}\"", s))
+            .collect::<Vec<_>>();
+        if !chk.needs_file {
+            args.push("<".to_string());
+            args.push(tmp_path.clone());
+        }
+        let s = format!(
+            r#"Initial test was not interesting. Try the following:
+
+    tmp="$(mktemp -d)"
+    cp {} "{tmp_path}"
+    cd "${{tmp}}"
+    {} {}
+    echo $?
+
+The last line should print 0 (or any other code passed to `--interesting-exit-code`). See the usage documentation for help: https://langston-barrett.github.io/treereduce/usage.html"#,
+            source
+                .clone()
+                .unwrap_or_else(|| String::from("your-test-case")),
+            chk.cmd,
+            args.join(" "),
+            tmp_path = tmp_path,
+        );
+        eprintln!("{}", s);
+        error!(s);
         std::process::exit(1);
     }
     Ok(())
@@ -346,7 +386,7 @@ pub fn main(
     let mut tree = parse(language, &src)?;
     handle_parse_errors(&path, &tree, &args.on_parse_error);
     if !args.no_verify {
-        check_initial_input_is_interesting(&conf.check, &tree, src.as_bytes())?;
+        check_initial_input_is_interesting(&conf.check, &tree, src.as_bytes(), &args.source)?;
     }
 
     let mut stats = stats::Stats::new();

@@ -23,11 +23,11 @@ pub trait Check {
 
 #[derive(Clone, Debug)]
 pub struct CmdCheck {
-    cmd: String,
-    args: Vec<String>,
+    pub(crate) cmd: String,
+    pub(crate) args: Vec<String>,
     exit_codes: Vec<i32>,
     temp_dir: PathBuf,
-    needs_file: bool,
+    pub(crate) needs_file: bool,
     inherit_stdout: bool,
     inherit_stderr: bool,
     // TODO(#6): stdout/stderr regex
@@ -84,7 +84,7 @@ impl CmdCheck {
     }
 
     /// Replace `@@` with the path to a temporary file
-    fn args_with_file(&self) -> io::Result<(Option<NamedTempFile>, Vec<String>)> {
+    pub(crate) fn args_with_file(&self) -> io::Result<(Option<NamedTempFile>, Vec<String>)> {
         debug_assert!(self.needs_file);
         let mut found = false;
         let mut temp_file = None;
