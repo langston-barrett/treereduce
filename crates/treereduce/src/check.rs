@@ -1,5 +1,7 @@
 use std::io;
 use std::io::Write;
+#[cfg(target_family = "unix")]
+use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
 use std::process::{Child, Command, ExitStatus, Stdio};
 
@@ -154,7 +156,10 @@ impl CmdCheck {
     }
 
     fn is_interesting(&self, status: &ExitStatus) -> bool {
+        #[cfg(not(target_family = "unix"))]
         let code = status.code();
+        #[cfg(target_family = "unix")]
+        let code = status.code().or_else(|| status.signal().map(|c| c + 128));
         self.exit_codes.iter().any(|c| Some(*c) == code)
     }
 }
