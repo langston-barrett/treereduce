@@ -12,7 +12,7 @@ Tested with `lit` and `FileCheck `.
 
 ```sh
 cargo build
-lit --path=$PWD/target/debug test/
+lit --path=$PWD/test/bin --path=$PWD/target/debug test/
 ```
 
 ## Tuning
