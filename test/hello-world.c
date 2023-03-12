@@ -1,4 +1,4 @@
-// RUN: treereduce-c -j 1 -o - -s %s -- clang -o /dev/null @@.c 2>&1 | FileCheck %s
+// RUN: treereduce-c -q -j 1 -o - -s %s -- clang -o /dev/null @@.c 2>&1 | FileCheck %s
 
 #include <stdio.h>
 // CHECK: main()
