@@ -9,6 +9,7 @@ fn main() -> Result<()> {
         // ("parameter_declaration", &["int x"][..]),
         HashMap::from([
             ("compound_statement", &["{}"][..]),
+            ("number_literal", &["0"][..]),
             ("parameter_list", &["()"][..]),
             ("primitive_type", &["int"][..]),
             ("return_statement", &["return;"][..]),
