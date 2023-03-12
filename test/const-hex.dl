@@ -1,0 +1,5 @@
+// RUN: treereduce-souffle -q -j 1 -o - -s %s -- match-c 'fact(0' 2>&1 | FileCheck %s
+
+// CHECK: fact(0).
+fact(0xbad1dea).
+// CHECK-EMPTY:
