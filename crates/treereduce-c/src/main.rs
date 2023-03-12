@@ -12,6 +12,7 @@ fn main() -> Result<()> {
             ("parameter_list", &["()"][..]),
             ("primitive_type", &["int"][..]),
             ("return_statement", &["return;"][..]),
+            ("string_literal", &["\"\""][..]),
             // Notes:
             //
             // - function_definition is optional wherever it appears, no need
