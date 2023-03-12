@@ -8,13 +8,14 @@ pkgs.mkShell {
     pkgs.creduce
     pkgs.cargo-flamegraph
     pkgs.halfempty
+    pkgs.lit
     pkgs.rust-analyzer
     pkgs.rustup
 
     # Running perses/picireny:
     pkgs.jre
     
-    pkgs.python3Packages.python-lsp-server
-    pkgs.python3Packages.virtualenv
+    pkgs.python39Packages.python-lsp-server
+    pkgs.python39Packages.virtualenv
   ];
 }
