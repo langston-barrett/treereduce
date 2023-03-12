@@ -1,0 +1,5 @@
+// RUN: treereduce-souffle -q -j 1 -o - -s %s -- match-c 'fact("' 2>&1 | FileCheck %s
+
+// CHECK: fact("").
+fact("big long string that should be replaced").
+// CHECK-EMPTY:
