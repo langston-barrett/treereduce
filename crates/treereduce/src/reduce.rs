@@ -561,6 +561,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
 
     let _span = debug_span!("Pass");
     info!("Original size: {}", orig.text.len());
+    // eprintln!("{}", orig.tree.root_node().to_sexp());
     // TODO(#25): SIGHUP handler to save intermediate progress
     let jobs = std::cmp::max(1, conf.jobs);
     let min_reduction = std::cmp::max(1, conf.min_reduction);
