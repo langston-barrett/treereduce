@@ -1,0 +1,16 @@
+[package]
+name = "treereduce-javascript"
+description = "Fast, parallel, syntax-aware program reducer for JavaScript"
+version = "0.1.0"
+keywords = ["program-reducer", "minimization", "test-case-reduction", "javascript"]
+edition = "2021"
+authors = ["Langston Barrett <langston.barrett@gmail.com>"]
+license = "MIT"
+readme = "../../README.md"
+homepage = "https://github.com/langston-barrett/treereduce"
+repository = "https://github.com/langston-barrett/treereduce"
+
+[dependencies]
+anyhow = "1"
+treereduce = { version = "0.1.0", path = "../treereduce", features = ["cli"] }
+tree-sitter-javascript = "0.20"
