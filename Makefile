@@ -29,6 +29,7 @@ static:
 	$(CARGO) build $(CARGO_FLAGS) \
 	  --bin treereduce-c \
 	  --bin treereduce-java \
+	  --bin treereduce-javascript \
 	  --bin treereduce-rust \
 	  --bin treereduce-souffle \
 	  --locked \

@@ -3,6 +3,7 @@ members = [
     "crates/treereduce",
     "crates/treereduce-c",
     "crates/treereduce-java",
+    "crates/treereduce-javascript",
     "crates/treereduce-rust",
     "crates/treereduce-souffle",
 ]

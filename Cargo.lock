@@ -526,6 +526,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tree-sitter-javascript"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2490fab08630b2c8943c320f7b63473cbf65511c8d83aec551beb9b4375906ed"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
 name = "tree-sitter-rust"
 version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -584,6 +594,15 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "tree-sitter-java",
+ "treereduce",
+]
+
+[[package]]
+name = "treereduce-javascript"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "tree-sitter-javascript",
  "treereduce",
 ]
 
