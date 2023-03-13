@@ -14,6 +14,7 @@
 
   - C
   - Java
+  - JavaScript
   - Rust
   - [Soufflé][souffle]
 
