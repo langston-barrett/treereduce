@@ -6,6 +6,6 @@ fn main() -> Result<()> {
     treereduce::cli::main(
         tree_sitter_rust::language(),
         tree_sitter_rust::NODE_TYPES,
-        HashMap::new(),
+        HashMap::from([("type_identifier", &["()"][..])]),
     )
 }
