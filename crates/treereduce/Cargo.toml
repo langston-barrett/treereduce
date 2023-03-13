@@ -31,14 +31,8 @@ tracing-subscriber = { version = "0.3", features = ["json"], optional = true }
 tracing-mutex = "0.2"
 tree-sitter = "0.20"
 tree-sitter-edit = "0.1"
+regex = "1.7.1"
 
 [features]
 default = []
-cli = [
-  "dep:anyhow",
-  "dep:clap",
-  "dep:clap-verbosity-flag",
-  "dep:nu-ansi-term",
-  "dep:num_cpus",
-  "dep:tracing-subscriber",
-]
+cli = ["dep:anyhow", "dep:clap", "dep:clap-verbosity-flag", "dep:nu-ansi-term", "dep:num_cpus", "dep:tracing-subscriber"]

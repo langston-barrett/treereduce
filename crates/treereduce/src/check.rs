@@ -1,10 +1,11 @@
-use std::io;
 use std::io::Write;
+use std::io::{self, Read};
 #[cfg(target_family = "unix")]
 use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
 use std::process::{Child, Command, ExitStatus, Stdio};
 
+use regex::Regex;
 use tempfile::NamedTempFile;
 
 pub trait Check {
@@ -28,6 +29,8 @@ pub struct CmdCheck {
     pub(crate) cmd: String,
     pub(crate) args: Vec<String>,
     exit_codes: Vec<i32>,
+    stderr: Option<Regex>,
+    stdout: Option<Regex>,
     temp_dir: PathBuf,
     pub(crate) needs_file: bool,
     inherit_stdout: bool,
@@ -46,11 +49,14 @@ fn is_marker(s: &str) -> bool {
 }
 
 impl CmdCheck {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         cmd: String,
         args: Vec<String>,
         exit_codes: Vec<i32>,
         temp_dir: Option<String>,
+        stdout: Option<Regex>,
+        stderr: Option<Regex>,
         inherit_stdout: bool,
         inherit_stderr: bool,
     ) -> Self {
@@ -61,6 +67,8 @@ impl CmdCheck {
             cmd,
             args,
             exit_codes,
+            stdout,
+            stderr,
             inherit_stdout,
             inherit_stderr,
         }
@@ -121,11 +129,15 @@ impl CmdCheck {
                 .stdin(Stdio::piped())
                 .stdout(if self.inherit_stdout {
                     Stdio::inherit()
-                } else {
+                } else if self.stdout.is_none() {
                     Stdio::null()
+                } else {
+                    Stdio::piped()
                 })
                 .stderr(if self.inherit_stderr {
                     Stdio::inherit()
+                } else if self.stderr.is_some() {
+                    Stdio::piped()
                 } else {
                     Stdio::null()
                 })
@@ -136,11 +148,15 @@ impl CmdCheck {
                 .stdin(Stdio::piped())
                 .stdout(if self.inherit_stdout {
                     Stdio::inherit()
+                } else if self.stdout.is_some() {
+                    Stdio::piped()
                 } else {
                     Stdio::null()
                 })
                 .stderr(if self.inherit_stderr {
                     Stdio::inherit()
+                } else if self.stderr.is_some() {
+                    Stdio::piped()
                 } else {
                     Stdio::null()
                 })
@@ -155,12 +171,37 @@ impl CmdCheck {
         Ok(CmdCheckState { child, temp_file })
     }
 
-    fn is_interesting(&self, status: &ExitStatus) -> bool {
+    fn is_interesting(
+        &self,
+        status: &ExitStatus,
+        stdout: Option<impl io::Read>,
+        stderr: Option<impl io::Read>,
+    ) -> bool {
         #[cfg(not(target_family = "unix"))]
         let code = status.code();
         #[cfg(target_family = "unix")]
         let code = status.code().or_else(|| status.signal().map(|c| c + 128));
+        let mut stdout_bytes = Vec::new();
+        let mut stderr_bytes = Vec::new();
+        if let Some(mut out) = stdout {
+            out.read_to_end(&mut stdout_bytes).unwrap();
+        }
+        if let Some(mut err) = stderr {
+            err.read_to_end(&mut stderr_bytes).unwrap();
+        }
+        let out_str = String::from_utf8_lossy(&stdout_bytes);
+        let err_str = String::from_utf8_lossy(&stderr_bytes);
         self.exit_codes.iter().any(|c| Some(*c) == code)
+            || self
+                .stdout
+                .as_ref()
+                .map(|rx| rx.is_match(&out_str))
+                .unwrap_or(false)
+            || self
+                .stderr
+                .as_ref()
+                .map(|rx| rx.is_match(&err_str))
+                .unwrap_or(false)
     }
 }
 
@@ -180,10 +221,24 @@ impl Check for CmdCheck {
     }
 
     fn try_wait(&self, state: &mut Self::State) -> io::Result<Option<bool>> {
-        Ok(state.child.try_wait()?.map(|s| self.is_interesting(&s)))
+        let mut stdout_bytes = Vec::new();
+        let mut stderr_bytes = Vec::new();
+        if let Some(ref mut out) = &mut state.child.stdout {
+            out.read_to_end(&mut stdout_bytes)?;
+        }
+        if let Some(ref mut err) = &mut state.child.stderr {
+            err.read_to_end(&mut stderr_bytes)?;
+        }
+        Ok(state.child.try_wait()?.map(|s| {
+            self.is_interesting(
+                &s,
+                Some(stdout_bytes.as_slice()),
+                Some(stderr_bytes.as_slice()),
+            )
+        }))
     }
 
     fn wait(&self, mut state: Self::State) -> io::Result<bool> {
-        Ok(self.is_interesting(&state.child.wait()?))
+        Ok(self.is_interesting(&state.child.wait()?, state.child.stdout, state.child.stderr))
     }
 }

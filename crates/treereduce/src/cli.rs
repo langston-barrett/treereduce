@@ -9,6 +9,7 @@ use std::time::Instant;
 use anyhow::{Context, Result};
 use clap::{ArgGroup, Parser};
 use clap_verbosity_flag::{InfoLevel, Verbosity};
+use regex::Regex;
 use tracing::{debug, error, info, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tree_sitter::Tree;
@@ -108,6 +109,22 @@ pub struct Args {
           long, default_values_t = vec![0], value_name = "CODE")]
     interesting_exit_code: Vec<i32>,
 
+    /// Regex to match interesting stdout
+    #[arg(
+        help_heading = "Interestingness check options",
+        long,
+        value_name = "REGEX"
+    )]
+    interesting_stdout: Option<String>,
+
+    /// Regex to match interesting stderr
+    #[arg(
+        help_heading = "Interestingness check options",
+        long,
+        value_name = "REGEX"
+    )]
+    interesting_stderr: Option<String>,
+
     /// Don't verify interestingness of the initial test case
     #[arg(
         help_heading = "Interestingness check options",
@@ -196,7 +213,7 @@ fn stdin_string() -> Result<String> {
     Ok(stdin_str)
 }
 
-fn check(args: &Args) -> CmdCheck {
+fn check(args: &Args) -> Result<CmdCheck> {
     if args.check.is_empty() {
         error!("Internal error: empty interestingness check!");
         std::process::exit(1);
@@ -204,14 +221,24 @@ fn check(args: &Args) -> CmdCheck {
     let mut argv: Vec<_> = args.check.iter().collect();
     let cmd = argv[0];
     argv.remove(0);
-    CmdCheck::new(
+    let stdout_regex = match &args.interesting_stdout {
+        Some(r) => Some(Regex::new(r).context("Invalid stdout regex")?),
+        None => None,
+    };
+    let stderr_regex = match &args.interesting_stderr {
+        Some(r) => Some(Regex::new(r).context("Invalid stderr regex")?),
+        None => None,
+    };
+    Ok(CmdCheck::new(
         cmd.to_string(),
         argv.iter().map(|s| s.to_string()).collect(),
         args.interesting_exit_code.clone(),
         args.temp_dir.clone(),
+        stdout_regex,
+        stderr_regex,
         args.inherit_stdout,
         args.inherit_stderr,
-    )
+    ))
 }
 
 fn check_initial_input_is_interesting(
@@ -355,13 +382,13 @@ fn init_tracing(args: &Args) {
 fn configure(
     args: &Args,
     replacements: HashMap<&'static str, &'static [&'static str]>,
-) -> reduce::Config<CmdCheck> {
-    reduce::Config {
-        check: check(args),
+) -> Result<reduce::Config<CmdCheck>> {
+    Ok(reduce::Config {
+        check: check(args)?,
         jobs: args.jobs,
         min_reduction: min_reduction(args),
         replacements,
-    }
+    })
 }
 
 pub fn main(
@@ -375,7 +402,7 @@ pub fn main(
 
     init_tracing(&args);
     make_temp_dir(&args.temp_dir)?;
-    let conf = configure(&args, replacements);
+    let conf = configure(&args, replacements)?;
 
     let (path, mut src) = if let Some(p) = &args.source {
         (p.to_string(), read_file(p)?)
