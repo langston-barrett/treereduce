@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io;
 use std::io::{Read, Write};
 use std::process;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use clap::{ArgGroup, Parser};
@@ -155,6 +155,15 @@ pub struct Args {
         long, default_value = None, value_name = "DIR")]
     pub temp_dir: Option<String>,
 
+    /// Timeout for the interestingness check (seconds)
+    #[arg(
+        help_heading = "Interestingness check options",
+        long,
+        default_value = None,
+        value_name = "SECS"
+    )]
+    pub timeout: Option<u64>,
+
     /// Same as --passes 1, --min-reduction 4
     #[arg(help_heading = "Reduction options", long, default_value_t = false)]
     pub fast: bool,
@@ -238,6 +247,7 @@ fn check(args: &Args) -> Result<CmdCheck> {
         stderr_regex,
         args.inherit_stdout,
         args.inherit_stderr,
+        args.timeout.map(Duration::from_secs),
     ))
 }
 

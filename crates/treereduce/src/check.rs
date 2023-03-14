@@ -4,9 +4,11 @@ use std::io::{self, Read};
 use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
 use std::process::{Child, Command, ExitStatus, Stdio};
+use std::time::Duration;
 
 use regex::Regex;
 use tempfile::NamedTempFile;
+use wait_timeout::ChildExt;
 
 pub trait Check {
     type State;
@@ -35,6 +37,7 @@ pub struct CmdCheck {
     pub(crate) needs_file: bool,
     inherit_stdout: bool,
     inherit_stderr: bool,
+    timeout: Option<Duration>,
     // TODO(#6): stdout/stderr regex
     // Will interact poorly with try_wait...
 }
@@ -59,6 +62,7 @@ impl CmdCheck {
         stderr: Option<Regex>,
         inherit_stdout: bool,
         inherit_stderr: bool,
+        timeout: Option<Duration>,
     ) -> Self {
         let temp_dir_path: Option<std::path::PathBuf> = temp_dir.as_ref().map(From::from);
         CmdCheck {
@@ -71,6 +75,7 @@ impl CmdCheck {
             stderr,
             inherit_stdout,
             inherit_stderr,
+            timeout,
         }
     }
 
@@ -239,6 +244,15 @@ impl Check for CmdCheck {
     }
 
     fn wait(&self, mut state: Self::State) -> io::Result<bool> {
-        Ok(self.is_interesting(&state.child.wait()?, state.child.stdout, state.child.stderr))
+        let status = if let Some(to) = self.timeout {
+            if let Some(s) = state.child.wait_timeout(to)? {
+                s
+            } else {
+                return Ok(false); // timeout
+            }
+        } else {
+            state.child.wait()?
+        };
+        Ok(self.is_interesting(&status, state.child.stdout, state.child.stderr))
     }
 }

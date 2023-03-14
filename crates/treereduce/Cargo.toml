@@ -32,6 +32,7 @@ tracing-mutex = "0.2"
 tree-sitter = "0.20"
 tree-sitter-edit = "0.1"
 regex = "1.7.1"
+wait-timeout = "0.2"
 
 [features]
 default = []
