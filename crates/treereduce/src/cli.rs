@@ -123,6 +123,24 @@ pub struct Args {
     )]
     interesting_stderr: Option<String>,
 
+    /// Regex to match *uninteresting* stdout, overrides interesting regex
+    #[arg(
+        help_heading = "Interestingness check options",
+        long,
+        value_name = "REGEX",
+        requires = "interesting_stdout"
+    )]
+    uninteresting_stdout: Option<String>,
+
+    /// Regex to match *uninteresting* stderr, overrides interesting regex
+    #[arg(
+        help_heading = "Interestingness check options",
+        long,
+        value_name = "REGEX",
+        requires = "interesting_stderr"
+    )]
+    uninteresting_stderr: Option<String>,
+
     /// Don't verify interestingness of the initial test case
     #[arg(
         help_heading = "Interestingness check options",
@@ -229,11 +247,19 @@ fn check(args: &Args) -> Result<CmdCheck> {
     let cmd = argv[0];
     argv.remove(0);
     let stdout_regex = match &args.interesting_stdout {
-        Some(r) => Some(Regex::new(r).context("Invalid stdout regex")?),
+        Some(r) => Some(Regex::new(r).context("Invalid interesting stdout regex")?),
         None => None,
     };
     let stderr_regex = match &args.interesting_stderr {
-        Some(r) => Some(Regex::new(r).context("Invalid stderr regex")?),
+        Some(r) => Some(Regex::new(r).context("Invalid interesting stderr regex")?),
+        None => None,
+    };
+    let un_stdout_regex = match &args.interesting_stdout {
+        Some(r) => Some(Regex::new(r).context("Invalid uninteresting stdout regex")?),
+        None => None,
+    };
+    let un_stderr_regex = match &args.interesting_stderr {
+        Some(r) => Some(Regex::new(r).context("Invalid uninteresting stderr regex")?),
         None => None,
     };
     Ok(CmdCheck::new(
@@ -243,6 +269,8 @@ fn check(args: &Args) -> Result<CmdCheck> {
         args.temp_dir.clone(),
         stdout_regex,
         stderr_regex,
+        un_stdout_regex,
+        un_stderr_regex,
         args.inherit_stdout,
         args.inherit_stderr,
         args.timeout.map(Duration::from_secs),
@@ -390,6 +418,8 @@ pub fn main(
     let args = Args::parse();
     debug_assert!(args.passes == DEFAULT_NUM_PASSES || !args.stable);
     debug_assert!(!(args.fast && args.slow));
+    debug_assert!(args.uninteresting_stdout.is_some() && args.interesting_stdout.is_none());
+    debug_assert!(args.uninteresting_stderr.is_some() && args.interesting_stderr.is_none());
 
     init_tracing(&args);
     make_temp_dir(&args.temp_dir)?;
