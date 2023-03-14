@@ -7,7 +7,7 @@ use std::io;
 use std::sync::atomic::{self, AtomicUsize};
 use std::sync::{Arc, Condvar, Mutex, TryLockError};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use tracing::{debug, debug_span, info};
 use tracing_mutex::stdsync::DebugRwLock;
@@ -19,6 +19,7 @@ use crate::edits::Edits;
 use crate::id::NodeId;
 use crate::node_types::NodeTypes;
 use crate::original::Original;
+use crate::stats::{self, Stats};
 use crate::versioned::Versioned;
 
 mod error;
@@ -28,6 +29,8 @@ mod task;
 use error::ReductionError;
 use idle::Idle;
 use task::{PrioritizedTask, Reduction, Task, TaskId};
+
+use self::error::MultiPassReductionError;
 
 fn node_size(node: &Node) -> usize {
     debug_assert!(node.start_byte() <= node.end_byte());
@@ -606,4 +609,66 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     debug_assert!(ctx.tasks.heap.read()?.is_empty());
     let edits = ctx.edits.read()?.clone();
     Ok((ctx.orig, edits.extract()))
+}
+
+// Don't care about parse errors, we're maintaining the interestingness
+fn parse(language: tree_sitter::Language, code: &str) -> tree_sitter::Tree {
+    let mut parser = tree_sitter::Parser::new();
+    parser
+        .set_language(language)
+        .expect("Failed to set tree-sitter parser language");
+    parser.parse(code, None).expect("Failed to parse code")
+}
+
+pub fn treereduce_multi_pass<T: Clone + Check + Debug + Send + Sync + 'static>(
+    language: tree_sitter::Language,
+    node_types: NodeTypes,
+    mut orig: Original,
+    conf: Config<T>,
+    max_passes: Option<usize>,
+) -> Result<(Original, Stats), MultiPassReductionError> {
+    let mut stats = Stats::new();
+    stats.start_size = orig.text.len();
+    let reduce_start = Instant::now();
+    let mut passes_done = 0;
+    while passes_done < max_passes.unwrap_or(std::usize::MAX) {
+        let pass_start_size = orig.text.len();
+        info!(
+            "Starting pass {} / {}",
+            passes_done + 1,
+            max_passes
+                .map(|n| n.to_string())
+                .unwrap_or_else(|| "?".to_string())
+        );
+        let pass_start = Instant::now();
+
+        let (new, edits) = treereduce(node_types.clone(), orig, conf.clone())?;
+        orig = new;
+        let mut new_src = Vec::new();
+        tree_sitter_edit::render(&mut new_src, &orig.tree, orig.text.as_slice(), &edits)?;
+        let text = std::str::from_utf8(&new_src)?.to_string();
+        orig = Original::new(parse(language, &text), new_src);
+
+        passes_done += 1;
+        let pass_stats = stats::Pass {
+            duration: pass_start.elapsed(),
+            start_size: pass_start_size,
+            end_size: orig.text.len(),
+        };
+        debug!(
+            "Pass {} duration: {}ms",
+            passes_done,
+            pass_stats.duration.as_millis()
+        );
+        stats.passes.push(pass_stats);
+
+        if edits.is_empty() {
+            info!("Qutting after pass {} found no reductions", passes_done);
+            break;
+        }
+    }
+    stats.duration = reduce_start.elapsed();
+    info!("Total time: {}ms", stats.duration.as_millis());
+    stats.end_size = orig.text.len();
+    Ok((orig, stats))
 }

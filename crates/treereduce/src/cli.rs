@@ -4,21 +4,19 @@ use std::fs::File;
 use std::io;
 use std::io::{Read, Write};
 use std::process;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use anyhow::{Context, Result};
 use clap::{ArgGroup, Parser};
 use clap_verbosity_flag::{InfoLevel, Verbosity};
 use regex::Regex;
-use tracing::{debug, error, info, warn};
+use tracing::{error, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tree_sitter::Tree;
 
 use crate::check::{Check, CmdCheck};
-use crate::edits::Edits;
 use crate::original::Original;
 use crate::reduce;
-use crate::stats;
 
 mod formatter;
 
@@ -305,23 +303,6 @@ The last line should print 0 (or any other code passed to `--interesting-exit-co
     Ok(())
 }
 
-fn edits(
-    args: &Args,
-    src_path: &str,
-    src: &str,
-    language: tree_sitter::Language,
-    node_types_json_str: &'static str,
-    conf: reduce::Config<CmdCheck>,
-) -> Result<(Tree, Edits)> {
-    debug_assert!(conf.min_reduction > 0);
-    let tree = parse(language, src)?;
-    handle_parse_errors(src_path, &tree, &args.on_parse_error);
-    let node_types = crate::node_types::NodeTypes::new(node_types_json_str)?;
-    let orig0 = Original::new(tree, src.as_bytes().to_vec());
-    let (orig, edits) = crate::reduce::treereduce(node_types, orig0, conf)?;
-    Ok((orig.tree, edits))
-}
-
 #[inline]
 fn print_result(output: &str, src: &str) -> Result<()> {
     if output == "-" {
@@ -414,69 +395,26 @@ pub fn main(
     make_temp_dir(&args.temp_dir)?;
     let conf = configure(&args, replacements)?;
 
-    let (path, mut src) = if let Some(p) = &args.source {
+    let (path, src) = if let Some(p) = &args.source {
         (p.to_string(), read_file(p)?)
     } else {
         ("<stdin>".to_string(), stdin_string()?)
     };
 
-    let mut tree = parse(language, &src)?;
+    let tree = parse(language, &src)?;
     handle_parse_errors(&path, &tree, &args.on_parse_error);
     if !args.no_verify {
         check_initial_input_is_interesting(&conf.check, &tree, src.as_bytes(), &args.source)?;
     }
 
-    let mut stats = stats::Stats::new();
-    stats.start_size = src.len();
-    let reduce_start = Instant::now();
-    let mut passes_done = 0;
     let max_passes = passes(&args);
-    let mut es: Edits;
-    while passes_done < max_passes.unwrap_or(std::usize::MAX) {
-        let pass_start_size = src.len();
-        info!(
-            "Starting pass {} / {}",
-            passes_done + 1,
-            max_passes
-                .map(|n| n.to_string())
-                .unwrap_or_else(|| "?".to_string())
-        );
-        let pass_start = Instant::now();
+    let node_types = crate::node_types::NodeTypes::new(node_types_json_str)?;
+    let orig = Original::new(tree, src.into_bytes());
+    let (reduced, stats) =
+        reduce::treereduce_multi_pass(language, node_types, orig, conf, max_passes)?;
+    let text = std::str::from_utf8(&reduced.text)?.to_string();
+    print_result(&args.output, &text)?;
 
-        (tree, es) = edits(
-            &args,
-            &path,
-            &src,
-            language,
-            node_types_json_str,
-            conf.clone(),
-        )?;
-        let mut new_src = Vec::new();
-        tree_sitter_edit::render(&mut new_src, &tree, src.as_bytes(), &es)?;
-        src = std::str::from_utf8(&new_src)?.to_string();
-
-        passes_done += 1;
-        let pass_stats = stats::Pass {
-            duration: pass_start.elapsed(),
-            start_size: pass_start_size,
-            end_size: src.len(),
-        };
-        debug!(
-            "Pass {} duration: {}ms",
-            passes_done,
-            pass_stats.duration.as_millis()
-        );
-        stats.passes.push(pass_stats);
-
-        if es.is_empty() {
-            info!("Qutting after pass {} found no reductions", passes_done);
-            break;
-        }
-    }
-    stats.duration = reduce_start.elapsed();
-    info!("Total time: {}ms", stats.duration.as_millis());
-    stats.end_size = src.len();
-    print_result(&args.output, &src)?;
     if args.stats {
         // https://nnethercote.github.io/perf-book/io.html#locking
         let stdout = std::io::stdout();
