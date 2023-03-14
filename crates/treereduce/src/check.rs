@@ -31,8 +31,10 @@ pub struct CmdCheck {
     pub(crate) cmd: String,
     pub(crate) args: Vec<String>,
     exit_codes: Vec<i32>,
-    stderr: Option<Regex>,
-    stdout: Option<Regex>,
+    interesting_stderr: Option<Regex>,
+    interesting_stdout: Option<Regex>,
+    uninteresting_stderr: Option<Regex>,
+    uninteresting_stdout: Option<Regex>,
     temp_dir: PathBuf,
     pub(crate) needs_file: bool,
     inherit_stdout: bool,
@@ -58,8 +60,10 @@ impl CmdCheck {
         args: Vec<String>,
         exit_codes: Vec<i32>,
         temp_dir: Option<String>,
-        stdout: Option<Regex>,
-        stderr: Option<Regex>,
+        interesting_stdout: Option<Regex>,
+        interesting_stderr: Option<Regex>,
+        uninteresting_stdout: Option<Regex>,
+        uninteresting_stderr: Option<Regex>,
         inherit_stdout: bool,
         inherit_stderr: bool,
         timeout: Option<Duration>,
@@ -71,8 +75,10 @@ impl CmdCheck {
             cmd,
             args,
             exit_codes,
-            stdout,
-            stderr,
+            interesting_stdout,
+            interesting_stderr,
+            uninteresting_stdout,
+            uninteresting_stderr,
             inherit_stdout,
             inherit_stderr,
             timeout,
@@ -134,14 +140,14 @@ impl CmdCheck {
                 .stdin(Stdio::piped())
                 .stdout(if self.inherit_stdout {
                     Stdio::inherit()
-                } else if self.stdout.is_none() {
+                } else if self.interesting_stdout.is_none() {
                     Stdio::null()
                 } else {
                     Stdio::piped()
                 })
                 .stderr(if self.inherit_stderr {
                     Stdio::inherit()
-                } else if self.stderr.is_some() {
+                } else if self.interesting_stderr.is_some() {
                     Stdio::piped()
                 } else {
                     Stdio::null()
@@ -153,14 +159,14 @@ impl CmdCheck {
                 .stdin(Stdio::piped())
                 .stdout(if self.inherit_stdout {
                     Stdio::inherit()
-                } else if self.stdout.is_some() {
+                } else if self.interesting_stdout.is_some() {
                     Stdio::piped()
                 } else {
                     Stdio::null()
                 })
                 .stderr(if self.inherit_stderr {
                     Stdio::inherit()
-                } else if self.stderr.is_some() {
+                } else if self.interesting_stderr.is_some() {
                     Stdio::piped()
                 } else {
                     Stdio::null()
@@ -196,14 +202,25 @@ impl CmdCheck {
         }
         let out_str = String::from_utf8_lossy(&stdout_bytes);
         let err_str = String::from_utf8_lossy(&stderr_bytes);
-        self.exit_codes.iter().any(|c| Some(*c) == code)
+        let interesting = self.exit_codes.iter().any(|c| Some(*c) == code)
             || self
-                .stdout
+                .interesting_stdout
                 .as_ref()
                 .map(|rx| rx.is_match(&out_str))
                 .unwrap_or(false)
             || self
-                .stderr
+                .interesting_stderr
+                .as_ref()
+                .map(|rx| rx.is_match(&err_str))
+                .unwrap_or(false);
+        interesting
+            && !self
+                .uninteresting_stdout
+                .as_ref()
+                .map(|rx| rx.is_match(&out_str))
+                .unwrap_or(false)
+            && !self
+                .uninteresting_stderr
                 .as_ref()
                 .map(|rx| rx.is_match(&err_str))
                 .unwrap_or(false)
