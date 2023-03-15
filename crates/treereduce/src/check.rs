@@ -8,6 +8,7 @@ use std::time::Duration;
 
 use regex::Regex;
 use tempfile::NamedTempFile;
+use tracing::debug;
 use wait_timeout::ChildExt;
 
 pub trait Check {
@@ -202,45 +203,60 @@ impl CmdCheck {
         }
         let out_str = String::from_utf8_lossy(&stdout_bytes);
         let err_str = String::from_utf8_lossy(&stderr_bytes);
-        let seems_interesting = self.exit_codes.iter().any(|c| Some(*c) == code)
-            || self
-                .interesting_stdout
-                .as_ref()
-                .map(|rx| rx.is_match(&out_str))
-                .unwrap_or(false)
-            || self
-                .interesting_stderr
-                .as_ref()
-                .map(|rx| rx.is_match(&err_str))
-                .unwrap_or(false);
-        let is_interesting = seems_interesting
-            && !self
-                .uninteresting_stdout
-                .as_ref()
-                .map(|rx| rx.is_match(&out_str))
-                .unwrap_or(false)
-            && !self
-                .uninteresting_stderr
-                .as_ref()
-                .map(|rx| rx.is_match(&err_str))
-                .unwrap_or(false);
+        let interesting_code =
+            !self.exit_codes.is_empty() && self.exit_codes.iter().any(|c| Some(*c) == code);
+        let stdout_match = self
+            .interesting_stdout
+            .as_ref()
+            .map(|rx| rx.is_match(&out_str))
+            .unwrap_or(false);
+        let stderr_match = self
+            .interesting_stderr
+            .as_ref()
+            .map(|rx| rx.is_match(&err_str))
+            .unwrap_or(false);
+        let stdout_unmatch = self
+            .uninteresting_stdout
+            .as_ref()
+            .map(|rx| rx.is_match(&out_str))
+            .unwrap_or(false);
+        let stderr_unmatch = self
+            .uninteresting_stderr
+            .as_ref()
+            .map(|rx| rx.is_match(&err_str))
+            .unwrap_or(false);
+        let is_interesting = (interesting_code || stdout_match || stderr_match)
+            && !stdout_unmatch
+            && !stderr_unmatch;
+        debug!(
+            interesting_code,
+            stdout_match,
+            stderr_match,
+            stdout_unmatch,
+            stderr_unmatch,
+            is_interesting,
+            "Interesting? {}",
+            is_interesting
+        );
         (is_interesting, stdout_bytes, stderr_bytes)
     }
 
+    #[allow(clippy::type_complexity)]
     pub fn wait_with_output(
         &self,
         mut state: CmdCheckState,
-    ) -> io::Result<(bool, Vec<u8>, Vec<u8>)> {
+    ) -> io::Result<(bool, Option<ExitStatus>, Vec<u8>, Vec<u8>)> {
         let status = if let Some(to) = self.timeout {
             if let Some(s) = state.child.wait_timeout(to)? {
                 s
             } else {
-                return Ok((false, Vec::new(), Vec::new())); // timeout
+                return Ok((false, None, Vec::new(), Vec::new())); // timeout
             }
         } else {
             state.child.wait()?
         };
-        Ok(self.is_interesting(&status, state.child.stdout, state.child.stderr))
+        let (b, o, e) = self.is_interesting(&status, state.child.stdout, state.child.stderr);
+        Ok((b, Some(status), o, e))
     }
 }
 
