@@ -187,7 +187,7 @@ impl CmdCheck {
         status: &ExitStatus,
         stdout: Option<impl io::Read>,
         stderr: Option<impl io::Read>,
-    ) -> bool {
+    ) -> (bool, Vec<u8>, Vec<u8>) {
         #[cfg(not(target_family = "unix"))]
         let code = status.code();
         #[cfg(target_family = "unix")]
@@ -202,7 +202,7 @@ impl CmdCheck {
         }
         let out_str = String::from_utf8_lossy(&stdout_bytes);
         let err_str = String::from_utf8_lossy(&stderr_bytes);
-        let interesting = self.exit_codes.iter().any(|c| Some(*c) == code)
+        let seems_interesting = self.exit_codes.iter().any(|c| Some(*c) == code)
             || self
                 .interesting_stdout
                 .as_ref()
@@ -213,7 +213,7 @@ impl CmdCheck {
                 .as_ref()
                 .map(|rx| rx.is_match(&err_str))
                 .unwrap_or(false);
-        interesting
+        let is_interesting = seems_interesting
             && !self
                 .uninteresting_stdout
                 .as_ref()
@@ -223,7 +223,24 @@ impl CmdCheck {
                 .uninteresting_stderr
                 .as_ref()
                 .map(|rx| rx.is_match(&err_str))
-                .unwrap_or(false)
+                .unwrap_or(false);
+        (is_interesting, stdout_bytes, stderr_bytes)
+    }
+
+    pub fn wait_with_output(
+        &self,
+        mut state: CmdCheckState,
+    ) -> io::Result<(bool, Vec<u8>, Vec<u8>)> {
+        let status = if let Some(to) = self.timeout {
+            if let Some(s) = state.child.wait_timeout(to)? {
+                s
+            } else {
+                return Ok((false, Vec::new(), Vec::new())); // timeout
+            }
+        } else {
+            state.child.wait()?
+        };
+        Ok(self.is_interesting(&status, state.child.stdout, state.child.stderr))
     }
 }
 
@@ -252,24 +269,16 @@ impl Check for CmdCheck {
             err.read_to_end(&mut stderr_bytes)?;
         }
         Ok(state.child.try_wait()?.map(|s| {
-            self.is_interesting(
+            let (b, _, _) = self.is_interesting(
                 &s,
                 Some(stdout_bytes.as_slice()),
                 Some(stderr_bytes.as_slice()),
-            )
+            );
+            b
         }))
     }
 
-    fn wait(&self, mut state: Self::State) -> io::Result<bool> {
-        let status = if let Some(to) = self.timeout {
-            if let Some(s) = state.child.wait_timeout(to)? {
-                s
-            } else {
-                return Ok(false); // timeout
-            }
-        } else {
-            state.child.wait()?
-        };
-        Ok(self.is_interesting(&status, state.child.stdout, state.child.stderr))
+    fn wait(&self, state: Self::State) -> io::Result<bool> {
+        Ok(self.wait_with_output(state)?.0)
     }
 }
