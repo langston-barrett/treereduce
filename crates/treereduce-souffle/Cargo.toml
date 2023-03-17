@@ -1,7 +1,7 @@
 [package]
 name = "treereduce-souffle"
 description = "Fast, parallel, syntax-aware program reducer for Soufflé"
-version = "0.1.0"
+version = "0.2.0"
 keywords = ["program-reducer", "minimization", "test-case-reduction", "souffle"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
@@ -12,5 +12,5 @@ repository = "https://github.com/langston-barrett/treereduce"
 
 [dependencies]
 anyhow = "1.0"
-treereduce = { version = "0.1.0", path = "../treereduce", features = ["cli"] }
+treereduce = { version = "0.2.0", path = "../treereduce", features = ["cli"] }
 tree-sitter-souffle = { version = "0.4.0" }

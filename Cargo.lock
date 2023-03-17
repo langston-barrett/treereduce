@@ -557,7 +557,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "bencher",
@@ -583,7 +583,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-c"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "tree-sitter-c",
@@ -592,7 +592,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-java"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "tree-sitter-java",
@@ -601,7 +601,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-javascript"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "tree-sitter-javascript",
@@ -610,7 +610,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-rust"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "tree-sitter-rust",
@@ -619,7 +619,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-souffle"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "tree-sitter-souffle",
