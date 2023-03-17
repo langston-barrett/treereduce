@@ -254,11 +254,11 @@ fn check(args: &Args) -> Result<CmdCheck> {
         Some(r) => Some(Regex::new(r).context("Invalid interesting stderr regex")?),
         None => None,
     };
-    let un_stdout_regex = match &args.interesting_stdout {
+    let un_stdout_regex = match &args.uninteresting_stdout {
         Some(r) => Some(Regex::new(r).context("Invalid uninteresting stdout regex")?),
         None => None,
     };
-    let un_stderr_regex = match &args.interesting_stderr {
+    let un_stderr_regex = match &args.uninteresting_stderr {
         Some(r) => Some(Regex::new(r).context("Invalid uninteresting stderr regex")?),
         None => None,
     };
