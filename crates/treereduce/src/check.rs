@@ -250,6 +250,7 @@ impl CmdCheck {
             if let Some(s) = state.child.wait_timeout(to)? {
                 s
             } else {
+                state.child.kill()?;
                 return Ok((false, None, Vec::new(), Vec::new())); // timeout
             }
         } else {

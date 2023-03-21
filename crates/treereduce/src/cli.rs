@@ -71,8 +71,6 @@ const FAST_NUM_PASSES: usize = 1;
 #[command(author, version, about, long_about = None,
           group(ArgGroup::new("fast-xor-slow").arg("fast").arg("slow")),
           group(ArgGroup::new("passes-xor-stable").arg("passes").arg("stable")))]
-// TODO(#6): stdout/stderr regex
-// TODO(#20): --timeout flag
 pub struct Args {
     /// Source code to consume; if empty, parse from stdin
     #[arg(
