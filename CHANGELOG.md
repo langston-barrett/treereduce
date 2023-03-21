@@ -2,6 +2,12 @@
 
 <!-- https://keepachangelog.com/en/1.0.0/ -->
 
+## [0.2.1] - 2023-03-16
+
+### Fixed
+
+- Actually kill timed-out subprocesses
+
 ## [0.2.0] - 2023-03-16
 
 ### Added
@@ -27,3 +33,4 @@ Initial release!
 
 [0.1.0]: https://github.com/langston-barrett/treereduce/releases/tag/v0.1.0
 [0.2.0]: https://github.com/langston-barrett/treereduce/releases/tag/v0.2.0
+[0.2.1]: https://github.com/langston-barrett/treereduce/releases/tag/v0.2.1
