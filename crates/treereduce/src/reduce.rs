@@ -148,6 +148,7 @@ struct Ctx<T>
 where
     T: Check + Send + Sync + 'static,
 {
+    delete_non_optional: bool,
     node_types: NodeTypes,
     tasks: Tasks,
     edits: DebugRwLock<Versioned<Edits>>,
@@ -430,7 +431,7 @@ fn explore<T: Check + Send + Sync + 'static>(
             )?;
         }
     }
-    if tctx.ctx.node_types.optional_node(&node) {
+    if tctx.ctx.node_types.optional_node(&node) || tctx.ctx.delete_non_optional {
         tctx.ctx
             .push_task(&node, Task::Reduce(Reduction::Delete(node_id)))?;
     } else {
@@ -547,6 +548,7 @@ fn work<T: Check + Send + Sync + 'static>(
 #[derive(Clone, Debug)]
 pub struct Config<T> {
     pub check: T,
+    pub delete_non_optional: bool,
     pub jobs: usize,
     // TODO(lb): Maybe per-pass, benchmark
     pub min_reduction: usize,
@@ -573,6 +575,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     let root_id = NodeId::new(&root);
     tasks.push(Task::Explore(root_id), node_size(&root))?;
     let ctx = Arc::new(Ctx {
+        delete_non_optional: conf.delete_non_optional,
         node_types,
         tasks,
         edits: DebugRwLock::new(Versioned::new(Edits::new())),
