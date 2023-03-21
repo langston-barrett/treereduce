@@ -401,6 +401,7 @@ fn configure(
     replacements: HashMap<&'static str, &'static [&'static str]>,
 ) -> Result<reduce::Config<CmdCheck>> {
     Ok(reduce::Config {
+        delete_non_optional: args.slow,
         check: check(args)?,
         jobs: args.jobs,
         min_reduction: min_reduction(args),
