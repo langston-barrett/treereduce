@@ -43,6 +43,7 @@ jobs:
             cargo publish --token ${CRATES_IO_TOKEN} -p "${pkg}"
           else
             cargo publish --dry-run --token ${CRATES_IO_TOKEN} -p "${pkg}"
+            break
           fi
           sleep 5
         done
