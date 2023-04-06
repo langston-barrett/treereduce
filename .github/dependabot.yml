@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "langston-barrett"
+    labels:
+      - "infrastructure"
+    reviewers:
+      - "langston-barrett"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "langston-barrett"
+    labels:
+      - "infrastructure"
+    reviewers:
+      - "langston-barrett"
