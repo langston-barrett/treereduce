@@ -576,11 +576,12 @@ dependencies = [
 
 [[package]]
 name = "tree-sitter-edit"
-version = "0.1.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75f1cf3e0a9a2e11528b783b979778217dd04591a4e2ad5c31e605f16737ff5d"
+checksum = "9ed3213ee656e99748eca539913b5c90df3d52618d9a1714e0935013955c8031"
 dependencies = [
  "tree-sitter",
+ "tree-sitter-traversal",
 ]
 
 [[package]]
@@ -619,6 +620,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "10f4f25aa2790a524866eac9f872de86b8bbc01412f39402c2cef3b9fe1dff8b"
 dependencies = [
  "cc",
+ "tree-sitter",
+]
+
+[[package]]
+name = "tree-sitter-traversal"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df8a158225e4a4d8505f071340bba9edd109b23f01b70540dccb7c799868f307"
+dependencies = [
  "tree-sitter",
 ]
 
