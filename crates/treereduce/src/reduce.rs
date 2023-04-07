@@ -5,12 +5,11 @@ use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
 use std::io;
 use std::sync::atomic::{self, AtomicUsize};
-use std::sync::{Arc, Condvar, Mutex, TryLockError};
+use std::sync::{Arc, Condvar, Mutex, RwLock, TryLockError};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use tracing::{debug, debug_span, info};
-use tracing_mutex::stdsync::DebugRwLock;
 use tree_sitter::{Language, Node, Tree};
 use tree_sitter_edit::render;
 
@@ -46,7 +45,7 @@ enum Interesting {
 
 #[derive(Debug)]
 struct Tasks {
-    heap: DebugRwLock<BinaryHeap<PrioritizedTask>>,
+    heap: RwLock<BinaryHeap<PrioritizedTask>>,
     task_id: AtomicUsize,
     push_signal: Condvar,
     push_signal_mutex: Mutex<bool>,
@@ -55,7 +54,7 @@ struct Tasks {
 impl Tasks {
     fn new() -> Self {
         Tasks {
-            heap: DebugRwLock::new(BinaryHeap::new()),
+            heap: RwLock::new(BinaryHeap::new()),
             // TODO(lb): this is shared across runs...
             task_id: AtomicUsize::new(0),
             push_signal: Condvar::new(),
@@ -151,7 +150,7 @@ where
     delete_non_optional: bool,
     node_types: NodeTypes,
     tasks: Tasks,
-    edits: DebugRwLock<Versioned<Edits>>,
+    edits: RwLock<Versioned<Edits>>,
     orig: Original,
     idle: Idle,
     check: T,
@@ -578,7 +577,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         delete_non_optional: conf.delete_non_optional,
         node_types,
         tasks,
-        edits: DebugRwLock::new(Versioned::new(Edits::new())),
+        edits: RwLock::new(Versioned::new(Edits::new())),
         orig,
         idle: Idle::new(),
         check: conf.check,

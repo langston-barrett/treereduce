@@ -559,15 +559,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tracing-mutex"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3df21ca58f0e0b5ee3181d8eebb8f2ec16d6ecbb2a04f351aa6abd7cf700f22"
-dependencies = [
- "lazy_static",
-]
-
-[[package]]
 name = "tracing-serde"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -674,7 +665,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "bencher",
@@ -689,7 +680,6 @@ dependencies = [
  "tempfile",
  "thiserror",
  "tracing",
- "tracing-mutex",
  "tracing-subscriber",
  "tree-sitter",
  "tree-sitter-c",
@@ -700,7 +690,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-c"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "tree-sitter-c",
@@ -709,7 +699,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-java"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "tree-sitter-java",
@@ -718,7 +708,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-javascript"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "tree-sitter-javascript",
@@ -727,7 +717,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-rust"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "tree-sitter-rust",
@@ -736,7 +726,7 @@ dependencies = [
 
 [[package]]
 name = "treereduce-souffle"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "tree-sitter-souffle",
