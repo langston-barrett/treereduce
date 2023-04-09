@@ -22,11 +22,9 @@ use crate::stats::{self, Stats};
 use crate::versioned::Versioned;
 
 mod error;
-mod idle;
 mod task;
 
 use error::ReductionError;
-use idle::Idle;
 use task::{PrioritizedTask, Reduction, Task, TaskId};
 
 use self::error::MultiPassReductionError;
@@ -153,7 +151,6 @@ where
     tasks: Tasks,
     edits: RwLock<Versioned<Edits>>,
     orig: Original,
-    idle: Idle,
     check: T,
     main_thread: Thread,
     min_task_size: usize,
@@ -511,17 +508,19 @@ fn work<T: Check + Send + Sync + 'static>(
     ctx: &Ctx<T>,
     num_threads: usize,
 ) -> Result<(), ReductionError> {
+    static IDLE_THREADS: AtomicUsize = AtomicUsize::new(0);
     let tctx = ThreadCtx::new(ctx);
     let mut idle = false;
     // Quit if all threads are idle and there are no remaining tasks
-    while ctx.idle.count() < num_threads {
+    while IDLE_THREADS.load(atomic::Ordering::Acquire) < num_threads {
         if idle {
+            // TODO(lb): Condvar?
             // TODO(lb): Integrate waiting into pop?
             // TODO(lb): Benchmark the duration
             // let point_o_one_seconds = Duration::new(0, 10000000);
             let not_long = Duration::new(0, 100000);
             tctx.ctx.tasks.wait_for_push(not_long)?;
-            tctx.ctx.idle.dec();
+            IDLE_THREADS.fetch_sub(1, atomic::Ordering::Release);
         }
         while let Some(ptask) = tctx.ctx.pop_task()? {
             debug!(
@@ -533,7 +532,7 @@ fn work<T: Check + Send + Sync + 'static>(
             );
             dispatch(&tctx, ptask)?;
         }
-        let num_idle = tctx.ctx.idle.inc();
+        let num_idle = IDLE_THREADS.fetch_add(1, atomic::Ordering::Release);
         debug!(
             idle = num_idle + 1,
             threads = num_threads,
@@ -582,7 +581,6 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         tasks,
         edits: RwLock::new(Versioned::new(Edits::new())),
         orig,
-        idle: Idle::new(),
         check: conf.check,
         main_thread: thread::current(),
         min_task_size: min_reduction,
