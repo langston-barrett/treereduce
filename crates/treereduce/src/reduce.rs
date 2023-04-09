@@ -142,25 +142,25 @@ impl Tasks {
 }
 
 #[derive(Debug)]
-struct Ctx<T>
+struct Ctx<'a, T>
 where
     T: Check + Send + Sync + 'static,
 {
     delete_non_optional: bool,
-    node_types: NodeTypes,
+    node_types: &'a NodeTypes,
     tasks: Tasks,
     edits: RwLock<Versioned<Edits>>,
     orig: Original,
-    check: T,
+    check: &'a T,
     min_task_size: usize,
-    replacements: HashMap<&'static str, &'static [&'static str]>,
+    replacements: &'a HashMap<&'static str, &'static [&'static str]>,
 }
 
 struct ThreadCtx<'a, T>
 where
     T: Check + Send + Sync + 'static,
 {
-    ctx: &'a Ctx<T>,
+    ctx: &'a Ctx<'a, T>,
     node_ids: HashMap<NodeId, Node<'a>>,
 }
 
@@ -186,7 +186,7 @@ where
     }
 }
 
-impl<T> Ctx<T>
+impl<'a, T> Ctx<'a, T>
 where
     T: Check + Send + Sync + 'static,
 {
@@ -408,7 +408,7 @@ fn _is_list(_node: &Node) -> bool {
     false
 }
 
-fn explore<T: Check + Send + Sync + 'static>(
+fn explore<T: Check + Send + Sync>(
     tctx: &ThreadCtx<T>,
     node_id: NodeId,
 ) -> Result<(), ReductionError> {
@@ -457,7 +457,7 @@ fn explore<T: Check + Send + Sync + 'static>(
     Ok(())
 }
 
-fn dispatch<T: Check + Send + Sync + 'static>(
+fn dispatch<T: Check + Send + Sync>(
     tctx: &ThreadCtx<T>,
     ptask: PrioritizedTask,
 ) -> Result<(), ReductionError> {
@@ -503,10 +503,7 @@ fn dispatch<T: Check + Send + Sync + 'static>(
 }
 
 /// Main function for each thread
-fn work<T: Check + Send + Sync + 'static>(
-    ctx: &Ctx<T>,
-    num_threads: usize,
-) -> Result<(), ReductionError> {
+fn work<T: Check + Send + Sync>(ctx: &Ctx<T>, num_threads: usize) -> Result<(), ReductionError> {
     static IDLE_THREADS: AtomicUsize = AtomicUsize::new(0);
     let tctx = ThreadCtx::new(ctx);
     let mut idle = false;
@@ -554,9 +551,9 @@ pub struct Config<T> {
 }
 
 pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
-    node_types: NodeTypes,
+    node_types: &NodeTypes,
     orig: Original,
-    conf: Config<T>,
+    conf: &Config<T>,
 ) -> Result<(Original, Edits), ReductionError> {
     if orig.text.is_empty() {
         return Ok((orig, Edits::new()));
@@ -578,9 +575,9 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         tasks,
         edits: RwLock::new(Versioned::new(Edits::new())),
         orig,
-        check: conf.check,
+        check: &conf.check,
         min_task_size: min_reduction,
-        replacements: conf.replacements,
+        replacements: &conf.replacements,
     };
 
     thread::scope(|s| {
@@ -605,9 +602,9 @@ fn parse(language: tree_sitter::Language, code: &str) -> tree_sitter::Tree {
 
 pub fn treereduce_multi_pass<T: Clone + Check + Debug + Send + Sync + 'static>(
     language: tree_sitter::Language,
-    node_types: NodeTypes,
+    node_types: &NodeTypes,
     mut orig: Original,
-    conf: Config<T>,
+    conf: &Config<T>,
     max_passes: Option<usize>,
 ) -> Result<(Original, Stats), MultiPassReductionError> {
     let mut stats = Stats::new();
@@ -625,7 +622,7 @@ pub fn treereduce_multi_pass<T: Clone + Check + Debug + Send + Sync + 'static>(
         );
         let pass_start = Instant::now();
 
-        let (new, edits) = treereduce(node_types.clone(), orig, conf.clone())?;
+        let (new, edits) = treereduce(node_types, orig, conf)?;
         orig = new;
         let mut new_src = Vec::new();
         tree_sitter_edit::render(&mut new_src, &orig.tree, orig.text.as_slice(), &edits)?;

@@ -440,7 +440,7 @@ pub fn main(
     let node_types = crate::node_types::NodeTypes::new(node_types_json_str)?;
     let orig = Original::new(tree, src.into_bytes());
     let (reduced, stats) =
-        reduce::treereduce_multi_pass(language, node_types, orig, conf, max_passes)?;
+        reduce::treereduce_multi_pass(language, &node_types, orig, &conf, max_passes)?;
     let text = std::str::from_utf8(&reduced.text)?.to_string();
     print_result(&args.output, &text)?;
 
