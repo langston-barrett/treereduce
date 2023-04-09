@@ -513,7 +513,6 @@ fn work<T: Check + Send + Sync + 'static>(
     // Quit if all threads are idle and there are no remaining tasks
     while IDLE_THREADS.load(atomic::Ordering::Acquire) < num_threads {
         if idle {
-            // TODO(lb): Condvar?
             // TODO(lb): Integrate waiting into pop?
             // TODO(lb): Benchmark the duration
             // let point_o_one_seconds = Duration::new(0, 10000000);
