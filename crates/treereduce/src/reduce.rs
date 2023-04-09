@@ -5,7 +5,7 @@ use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
 use std::io;
 use std::sync::atomic::{self, AtomicUsize};
-use std::sync::{Arc, Condvar, Mutex, RwLock, TryLockError};
+use std::sync::{Condvar, Mutex, RwLock, TryLockError};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -31,6 +31,7 @@ use task::{PrioritizedTask, Reduction, Task, TaskId};
 
 use self::error::MultiPassReductionError;
 
+#[inline]
 fn node_size(node: &Node) -> usize {
     debug_assert!(node.start_byte() <= node.end_byte());
     node.end_byte() - node.start_byte()
@@ -162,7 +163,7 @@ struct ThreadCtx<'a, T>
 where
     T: Check + Send + Sync + 'static,
 {
-    ctx: &'a Arc<Ctx<T>>,
+    ctx: &'a Ctx<T>,
     node_ids: HashMap<NodeId, Node<'a>>,
 }
 
@@ -170,7 +171,7 @@ impl<'a, T> ThreadCtx<'a, T>
 where
     T: Check + Send + Sync + 'static,
 {
-    fn new(ctx: &'a Arc<Ctx<T>>) -> Self {
+    fn new(ctx: &'a Ctx<T>) -> Self {
         let mut node_ids = HashMap::new();
         let mut queue = vec![ctx.orig.tree.root_node()];
         while let Some(node) = queue.pop() {
@@ -506,10 +507,10 @@ fn dispatch<T: Check + Send + Sync + 'static>(
 
 /// Main function for each thread
 fn work<T: Check + Send + Sync + 'static>(
-    ctx: Arc<Ctx<T>>,
+    ctx: &Ctx<T>,
     num_threads: usize,
 ) -> Result<(), ReductionError> {
-    let tctx = ThreadCtx::new(&ctx);
+    let tctx = ThreadCtx::new(ctx);
     let mut idle = false;
     // Quit if all threads are idle and there are no remaining tasks
     while ctx.idle.count() < num_threads {
@@ -573,7 +574,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     let root = orig.tree.root_node();
     let root_id = NodeId::new(&root);
     tasks.push(Task::Explore(root_id), node_size(&root))?;
-    let ctx = Arc::new(Ctx {
+    let ctx = Ctx {
         delete_non_optional: conf.delete_non_optional,
         node_types,
         tasks,
@@ -583,31 +584,31 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         check: conf.check,
         min_task_size: min_reduction,
         replacements: conf.replacements,
+    };
+
+    thread::scope(|s| {
+        let mut thread_handles = Vec::new();
+        thread_handles.reserve(jobs);
+        for _ in 0..jobs {
+            thread_handles.push(s.spawn(|| work(&ctx, jobs)));
+        }
+        while let Some(t) = thread_handles.pop() {
+            if t.is_finished() {
+                t.join().expect("Thread panic'd!").unwrap(); // TODO(lb): don't expect
+            } else {
+                thread_handles.push(t);
+                // TODO(lb): Benchmark the duration
+                // let point_o_one_seconds = Duration::new(0, 10000000);
+                let not_long = Duration::new(0, 1000);
+                // TODO(lb): This is the wrong condition to wait on - wait for
+                // threads to actually quit!
+                ctx.idle.wait(not_long).expect("Failed to wait for thread");
+            }
+        }
     });
 
-    let mut thread_handles = Vec::new();
-    thread_handles.reserve(jobs);
-    for _ in 0..jobs {
-        let actx = Arc::clone(&ctx);
-        thread_handles.push(thread::spawn(move || work(actx, jobs)));
-    }
-
-    while let Some(t) = thread_handles.pop() {
-        if t.is_finished() {
-            t.join().expect("Thread panic'd!")?; // TODO(lb): don't expect
-        } else {
-            thread_handles.push(t);
-            // TODO(lb): Benchmark the duration
-            // let point_o_one_seconds = Duration::new(0, 10000000);
-            let not_long = Duration::new(0, 1000);
-            // TODO(lb): This is the wrong condition to wait on - wait for
-            // threads to actually quit!
-            ctx.idle.wait(not_long)?;
-        }
-    }
     // Arc::try_unwrap is not needed, but is nice just to assert that this is
     // the only reference.
-    let ctx = Arc::try_unwrap(ctx).expect("Multiple references!");
     debug_assert!(ctx.tasks.heap.read()?.is_empty());
     let edits = ctx.edits.read()?.clone();
     Ok((ctx.orig, edits.extract()))
