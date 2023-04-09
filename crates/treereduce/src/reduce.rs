@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use std::io;
 use std::sync::atomic::{self, AtomicUsize};
 use std::sync::{Condvar, Mutex, RwLock, TryLockError};
-use std::thread::{self, Thread};
+use std::thread;
 use std::time::{Duration, Instant};
 
 use tracing::{debug, debug_span, info};
@@ -152,7 +152,6 @@ where
     edits: RwLock<Versioned<Edits>>,
     orig: Original,
     check: T,
-    main_thread: Thread,
     min_task_size: usize,
     replacements: HashMap<&'static str, &'static [&'static str]>,
 }
@@ -542,7 +541,6 @@ fn work<T: Check + Send + Sync + 'static>(
         );
         idle = true;
     }
-    ctx.main_thread.unpark();
     Ok(())
 }
 
@@ -582,7 +580,6 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         edits: RwLock::new(Versioned::new(Edits::new())),
         orig,
         check: conf.check,
-        main_thread: thread::current(),
         min_task_size: min_reduction,
         replacements: conf.replacements,
     };
