@@ -584,8 +584,6 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         s.spawn(|| work(&ctx, jobs));
     });
 
-    // Arc::try_unwrap is not needed, but is nice just to assert that this is
-    // the only reference.
     debug_assert!(ctx.tasks.heap.read()?.is_empty());
     let edits = ctx.edits.read()?.clone();
     Ok((ctx.orig, edits.extract()))
