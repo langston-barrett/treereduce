@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use std::io;
 use std::sync::atomic::{self, AtomicUsize};
 use std::sync::{Condvar, Mutex, RwLock, TryLockError};
-use std::thread;
+use std::thread::{self, Thread};
 use std::time::{Duration, Instant};
 
 use tracing::{debug, debug_span, info};
@@ -155,6 +155,7 @@ where
     orig: Original,
     idle: Idle,
     check: T,
+    main_thread: Thread,
     min_task_size: usize,
     replacements: HashMap<&'static str, &'static [&'static str]>,
 }
@@ -542,6 +543,7 @@ fn work<T: Check + Send + Sync + 'static>(
         );
         idle = true;
     }
+    ctx.main_thread.unpark();
     Ok(())
 }
 
@@ -582,29 +584,13 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
         orig,
         idle: Idle::new(),
         check: conf.check,
+        main_thread: thread::current(),
         min_task_size: min_reduction,
         replacements: conf.replacements,
     };
 
     thread::scope(|s| {
-        let mut thread_handles = Vec::new();
-        thread_handles.reserve(jobs);
-        for _ in 0..jobs {
-            thread_handles.push(s.spawn(|| work(&ctx, jobs)));
-        }
-        while let Some(t) = thread_handles.pop() {
-            if t.is_finished() {
-                t.join().expect("Thread panic'd!").unwrap(); // TODO(lb): don't expect
-            } else {
-                thread_handles.push(t);
-                // TODO(lb): Benchmark the duration
-                // let point_o_one_seconds = Duration::new(0, 10000000);
-                let not_long = Duration::new(0, 1000);
-                // TODO(lb): This is the wrong condition to wait on - wait for
-                // threads to actually quit!
-                ctx.idle.wait(not_long).expect("Failed to wait for thread");
-            }
-        }
+        s.spawn(|| work(&ctx, jobs));
     });
 
     // Arc::try_unwrap is not needed, but is nice just to assert that this is
