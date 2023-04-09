@@ -417,8 +417,8 @@ pub fn main(
     let args = Args::parse();
     debug_assert!(args.passes == DEFAULT_NUM_PASSES || !args.stable);
     debug_assert!(!(args.fast && args.slow));
-    debug_assert!(args.uninteresting_stdout.is_some() && args.interesting_stdout.is_none());
-    debug_assert!(args.uninteresting_stderr.is_some() && args.interesting_stderr.is_none());
+    debug_assert!(!(args.uninteresting_stdout.is_some() && args.interesting_stdout.is_none()));
+    debug_assert!(!(args.uninteresting_stderr.is_some() && args.interesting_stderr.is_none()));
 
     init_tracing(&args);
     make_temp_dir(&args.temp_dir)?;
