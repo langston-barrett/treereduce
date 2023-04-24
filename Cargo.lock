@@ -618,7 +618,7 @@ dependencies = [
 [[package]]
 name = "tree-sitter-java"
 version = "0.20.0"
-source = "git+https://github.com/tree-sitter/tree-sitter-java#3c24aa9365985830421a3a7b6791b415961ea770"
+source = "git+https://github.com/tree-sitter/tree-sitter-java#c194ee5e6ede5f26cf4799feead4a8f165dcf14d"
 dependencies = [
  "cc",
  "tree-sitter",
