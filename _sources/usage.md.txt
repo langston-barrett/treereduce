@@ -45,3 +45,5 @@ Try `--slow`. If that's not small enough, read on.
 - Use `--stable`. If that's too slow, increase `--passes`.
 - Set `--min-reduction 1`.
 - Run [Halfempty][halfempty] or another test-case reducer on the output.
+
+[halfempty]: https://github.com/googleprojectzero/halfempty
