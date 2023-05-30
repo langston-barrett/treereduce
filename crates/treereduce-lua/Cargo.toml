@@ -1,0 +1,16 @@
+[package]
+name = "treereduce-lua"
+description = "Fast, parallel, syntax-aware program reducer for Lua"
+version = "0.2.2"
+keywords = ["program-reducer", "minimization", "test-case-reduction", "lua"]
+edition = "2021"
+authors = ["Langston Barrett <langston.barrett@gmail.com>"]
+license = "MIT"
+readme = "../../README.md"
+homepage = "https://github.com/langston-barrett/treereduce"
+repository = "https://github.com/langston-barrett/treereduce"
+
+[dependencies]
+anyhow = "1"
+treereduce = { version = "0.2.2", path = "../treereduce", features = ["cli"] }
+tree-sitter-lua = "0.0.17"

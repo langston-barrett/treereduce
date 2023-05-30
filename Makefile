@@ -30,6 +30,7 @@ static:
 	  --bin treereduce-c \
 	  --bin treereduce-java \
 	  --bin treereduce-javascript \
+	  --bin treereduce-lua \
 	  --bin treereduce-rust \
 	  --bin treereduce-souffle \
 	  --locked \
