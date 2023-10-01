@@ -56,7 +56,7 @@ jobs:
       run: |
         rustup update
         rustup component add clippy
-    - uses: Swatinem/rust-cache@e207df5d269b42b69c8bc5101da26f7d31feddb4
+    - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
     - name: Lint
       run: make lint
 
@@ -68,13 +68,13 @@ jobs:
       run: |
         sudo apt-get install -y musl-tools
         rustup target add x86_64-unknown-linux-musl
-    - uses: Swatinem/rust-cache@e207df5d269b42b69c8bc5101da26f7d31feddb4
+    - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
     - run: make static
 
   test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: Swatinem/rust-cache@e207df5d269b42b69c8bc5101da26f7d31feddb4
+    - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
     - run: make build
     - run: make test
