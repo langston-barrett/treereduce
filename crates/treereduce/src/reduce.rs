@@ -191,8 +191,7 @@ where
     T: Check + Send + Sync + 'static,
 {
     fn render(&self, edits: &Edits) -> io::Result<(bool, Vec<u8>)> {
-        let mut text: Vec<u8> = Vec::new();
-        text.reserve(self.orig.text.len() / 2);
+        let mut text: Vec<u8> = Vec::with_capacity(self.orig.text.len() / 2);
         let changed = render(&mut text, &self.orig.tree, &self.orig.text, edits)?;
         Ok((changed, text))
     }

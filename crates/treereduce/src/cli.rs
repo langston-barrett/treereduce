@@ -281,8 +281,7 @@ fn check_initial_input_is_interesting(
     src: &[u8],
     source: &Option<String>,
 ) -> Result<()> {
-    let mut test: Vec<u8> = Vec::new();
-    test.reserve(src.len());
+    let mut test: Vec<u8> = Vec::with_capacity(src.len());
     tree_sitter_edit::render(&mut test, tree, src, &crate::edits::Edits::new())?;
     if !chk
         .interesting(&test)
