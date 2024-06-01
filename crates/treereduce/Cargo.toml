@@ -28,7 +28,7 @@ tempfile = "3"
 thiserror = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json"], optional = true }
-tree-sitter = "0.20"
+tree-sitter = "0.22"
 tree-sitter-edit = "0.3"
 regex = "1.10.4"
 wait-timeout = "0.2"
