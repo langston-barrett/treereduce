@@ -24,11 +24,11 @@ mod tests {
             Ok(())
         }
 
-        fn try_wait(&self, state: &mut Self::State) -> io::Result<Option<bool>> {
+        fn try_wait(&self, _state: &mut Self::State) -> io::Result<Option<bool>> {
             Ok(Some(true))
         }
 
-        fn wait(&self, state: Self::State) -> io::Result<bool> {
+        fn wait(&self, _state: Self::State) -> io::Result<bool> {
             Ok(true)
         }
     }
@@ -47,11 +47,11 @@ mod tests {
             Ok(())
         }
 
-        fn try_wait(&self, state: &mut Self::State) -> io::Result<Option<bool>> {
+        fn try_wait(&self, _state: &mut Self::State) -> io::Result<Option<bool>> {
             Ok(Some(false))
         }
 
-        fn wait(&self, state: Self::State) -> io::Result<bool> {
+        fn wait(&self, _state: Self::State) -> io::Result<bool> {
             Ok(false)
         }
     }
