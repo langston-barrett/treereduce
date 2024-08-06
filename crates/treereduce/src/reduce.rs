@@ -219,7 +219,7 @@ where
         // Ok(self.tasks.wait_pop(point_o_one_seconds)?.map(|pt| pt.task))
         let task = self.tasks.pop()?;
         debug_assert!(
-            task.as_ref().map(|t| t.priority).unwrap_or(std::usize::MAX) >= self.min_task_size
+            task.as_ref().map(|t| t.priority).unwrap_or(usize::MAX) >= self.min_task_size
         );
         Ok(task)
     }
@@ -608,7 +608,7 @@ pub fn treereduce_multi_pass<T: Clone + Check + Debug + Send + Sync + 'static>(
     stats.start_size = orig.text.len();
     let reduce_start = Instant::now();
     let mut passes_done = 0;
-    while passes_done < max_passes.unwrap_or(std::usize::MAX) {
+    while passes_done < max_passes.unwrap_or(usize::MAX) {
         let pass_start_size = orig.text.len();
         info!(
             "Starting pass {} / {}",
