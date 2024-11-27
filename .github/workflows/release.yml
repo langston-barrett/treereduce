@@ -26,7 +26,7 @@ jobs:
     - uses: ncipollo/release-action@v1
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       with:
-        artifacts: "treereduce-c,treereduce-java,treereduce-javascript,treereduce-lua,treereduce-rust,treereduce-souffle"
+        artifacts: "treereduce-c,treereduce-java,treereduce-javascript,treereduce-lua,treereduce-rust,treereduce-souffle,treereduce-swift"
         artifactErrorsFailBuild: true
         body: "See [CHANGELOG.md](https://github.com/langston-barrett/treereduce/blob/main/doc/CHANGELOG.md)."
         draft: true
