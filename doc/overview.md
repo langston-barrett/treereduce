@@ -18,6 +18,7 @@
   - Lua
   - Rust
   - [Soufflé][souffle]
+  - Swift
 
 ## Comparison to Other Tools
 
