@@ -186,7 +186,7 @@ where
     }
 }
 
-impl<'a, T> Ctx<'a, T>
+impl<T> Ctx<'_, T>
 where
     T: Check + Send + Sync + 'static,
 {
