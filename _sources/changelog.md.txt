@@ -2,6 +2,13 @@
 
 <!-- https://keepachangelog.com/en/1.0.0/ -->
 
+## [0.3.1] - 2024-12-23
+
+### Fixed
+
+- A bug that caused hangs with multiple threads
+- A bug that caused only one pass to perform reductions
+
 ## [0.3.0] - 2023-07-17
 
 ### Added
