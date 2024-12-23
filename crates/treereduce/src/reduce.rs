@@ -580,7 +580,9 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     };
 
     thread::scope(|s| {
-        s.spawn(|| work(&ctx, jobs));
+        for _ in 0..jobs {
+            s.spawn(|| work(&ctx, jobs));
+        }
     });
 
     debug_assert!(ctx.tasks.heap.read()?.is_empty());
