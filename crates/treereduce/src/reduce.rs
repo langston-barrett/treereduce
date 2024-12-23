@@ -504,6 +504,12 @@ fn dispatch<T: Check + Send + Sync>(
 /// Main function for each thread
 fn work<T: Check + Send + Sync>(ctx: &Ctx<T>, num_threads: usize) -> Result<(), ReductionError> {
     static IDLE_THREADS: AtomicUsize = AtomicUsize::new(0);
+    // Since IDLE_THREADS is static, decrement for second and later passes
+    let idle = IDLE_THREADS.load(atomic::Ordering::Acquire);
+    if idle > 0 {
+        IDLE_THREADS.store(idle - 1, atomic::Ordering::Release)
+    }
+
     let tctx = ThreadCtx::new(ctx);
     let mut idle = false;
     // Quit if all threads are idle and there are no remaining tasks
