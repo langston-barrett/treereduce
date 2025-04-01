@@ -30,7 +30,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json"], optional = true }
 tree-sitter = "0.20"
 tree-sitter-edit = "0.3"
-regex = "1.10.6"
+regex = "1.11.1"
 wait-timeout = "0.2"
 
 [features]
