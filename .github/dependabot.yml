@@ -3,21 +3,9 @@ updates:
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
-      interval: "monthly"
-    assignees:
-      - "langston-barrett"
-    labels:
-      - "infrastructure"
-    reviewers:
-      - "langston-barrett"
+      interval: "daily"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly"
-    assignees:
-      - "langston-barrett"
-    labels:
-      - "infrastructure"
-    reviewers:
-      - "langston-barrett"
+      interval: "daily"

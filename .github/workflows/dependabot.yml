@@ -1,0 +1,13 @@
+name: dependabot
+on:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot:
+    uses: langston-barrett/gha/.github/workflows/merge-dependabot-prs.yml@8453c38f50561612c0baddb16d1438950c4d7473
+    with:
+      only-patch: false
