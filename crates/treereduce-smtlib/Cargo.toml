@@ -1,0 +1,16 @@
+[package]
+name = "treereduce-smtlib"
+description = "Fast, parallel, syntax-aware program reducer for SMT-Lib 2"
+version = "0.3.1"
+keywords = ["program-reducer", "minimization", "test-case-reduction", "smtlib"]
+edition = "2021"
+authors = ["Langston Barrett <langston.barrett@gmail.com>"]
+license = "MIT"
+readme = "../../README.md"
+homepage = "https://github.com/langston-barrett/treereduce"
+repository = "https://github.com/langston-barrett/treereduce"
+
+[dependencies]
+anyhow = "1.0"
+treereduce = { version = "0.3.1", path = "../treereduce", features = ["cli"] }
+tree-sitter-smtlib2 = { git = "https://github.com/Halbaroth/tree-sitter-smtlib2" }
