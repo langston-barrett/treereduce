@@ -15,7 +15,7 @@ pub enum ReductionError {
 
 impl<T> From<PoisonError<T>> for ReductionError {
     fn from(e: PoisonError<T>) -> ReductionError {
-        ReductionError::LockError(format!("{}", e))
+        ReductionError::LockError(format!("{e}"))
     }
 }
 

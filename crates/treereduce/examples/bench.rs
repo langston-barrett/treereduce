@@ -166,7 +166,7 @@ impl Tool {
         test_args: Vec<String>,
     ) -> Result<Output> {
         let mut args = config.flags(self);
-        let j = &format!("{}", jobs);
+        let j = &format!("{jobs}");
         match self {
             Tool::Creduce => {
                 assert!(test_args.is_empty());
@@ -323,9 +323,9 @@ fn run_tool_on_file(args: &Args, conf: &Config, tool: &Tool, file: &Path) -> Res
     let path_str = file.to_string_lossy();
     let (test_bin, test_args) = args.oracle.get(tool);
     std::fs::copy(file, OUT_FILE)
-        .with_context(|| format!("Failed to copy input file {} to {}", path_str, OUT_FILE))?;
+        .with_context(|| format!("Failed to copy input file {path_str} to {OUT_FILE}"))?;
     let src = std::fs::read_to_string(file)
-        .with_context(|| format!("Failed to read input file {}", path_str))?;
+        .with_context(|| format!("Failed to read input file {path_str}"))?;
     let start_size = src.len();
 
     if DEBUG {
@@ -353,7 +353,7 @@ fn run_tool_on_file(args: &Args, conf: &Config, tool: &Tool, file: &Path) -> Res
     let result = std::fs::read_to_string(OUT_FILE)
         .with_context(|| format!("Failed to read output file {}", "out"))?;
     if DEBUG {
-        eprintln!("Result:\n{}", result);
+        eprintln!("Result:\n{result}");
     }
     std::fs::remove_file(OUT_FILE)?;
     let end_size = result.len();

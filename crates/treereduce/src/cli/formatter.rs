@@ -39,7 +39,7 @@ where
             if field.name() == "message" {
                 // TODO(lb): Pad level to 5 places
                 // TODO(lb): Don't print all the danged fields
-                write!(&mut writer, "[{}] ", style.paint(format!("{}", level)))?;
+                write!(&mut writer, "[{}] ", style.paint(format!("{level}")))?;
                 ctx.field_format().format_fields(writer.by_ref(), event)?;
             }
         }

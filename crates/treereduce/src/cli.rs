@@ -209,14 +209,14 @@ pub struct Args {
 }
 
 fn read_file(file: &str) -> Result<String> {
-    fs::read_to_string(file).with_context(|| format!("Failed to read file {}", file))
+    fs::read_to_string(file).with_context(|| format!("Failed to read file {file}"))
 }
 
 fn make_temp_dir(dir: &Option<String>) -> Result<()> {
     if let Some(d) = dir {
         // Just best-effort, to error out early
         std::fs::create_dir_all(d)
-            .with_context(|| format!("Failed to access or create temporary directory {}", d))?;
+            .with_context(|| format!("Failed to access or create temporary directory {d}"))?;
     }
     Ok(())
 }
@@ -298,7 +298,7 @@ fn check_initial_input_is_interesting(
         };
         let mut args = command_line
             .iter()
-            .map(|s| format!("\"{}\"", s))
+            .map(|s| format!("\"{s}\""))
             .collect::<Vec<_>>();
         if !chk.needs_file {
             args.push("<".to_string());
@@ -321,7 +321,7 @@ The last line should print 0 (or any other code passed to `--interesting-exit-co
             args.join(" "),
             tmp_path = tmp_path,
         );
-        eprintln!("{}", s);
+        eprintln!("{s}");
         error!(s);
         std::process::exit(1);
     }
