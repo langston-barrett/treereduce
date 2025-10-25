@@ -13,3 +13,6 @@ members = [
 # https://nnethercote.github.io/perf-book/build-configuration.html
 [profile.release]
 lto = true
+
+[workspace.dependencies]
+treereduce = { version = "0.4.0", path = "./crates/treereduce", features = ["cli"] }
