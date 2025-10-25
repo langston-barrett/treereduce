@@ -10,7 +10,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use tracing::{debug, debug_span, info};
-use tree_sitter::{Language, Node, Tree};
+use tree_sitter::{Node, Tree};
 use tree_sitter_edit::render;
 
 use crate::check::Check;
@@ -196,15 +196,11 @@ where
         Ok((changed, text))
     }
 
-    fn _language(&self) -> Language {
-        self.orig.tree.language()
-    }
-
     fn _parse(&self, src: &[u8]) -> Tree {
         let mut parser = tree_sitter::Parser::new();
         // TODO(lb): Incremental re-parsing
         parser
-            .set_language(self._language())
+            .set_language(&self.orig.tree.language())
             .expect("Error loading language");
         parser.parse(src, None).expect("Failed to parse")
     }
@@ -597,7 +593,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
 }
 
 // Don't care about parse errors, we're maintaining the interestingness
-fn parse(language: tree_sitter::Language, code: &str) -> tree_sitter::Tree {
+fn parse(language: &tree_sitter::Language, code: &str) -> tree_sitter::Tree {
     let mut parser = tree_sitter::Parser::new();
     parser
         .set_language(language)
@@ -632,7 +628,7 @@ pub fn treereduce_multi_pass<T: Clone + Check + Debug + Send + Sync + 'static>(
         let mut new_src = Vec::new();
         tree_sitter_edit::render(&mut new_src, &orig.tree, orig.text.as_slice(), &edits)?;
         let text = std::str::from_utf8(&new_src)?.to_string();
-        orig = Original::new(parse(language, &text), new_src);
+        orig = Original::new(parse(&language, &text), new_src);
 
         passes_done += 1;
         let pass_stats = stats::Pass {
