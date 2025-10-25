@@ -623,6 +623,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tree-sitter-souffle"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7eeb3eea344296b94d13df8de804147aba98c831978bd7321eaa3e3934cbcbbc"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
+]
+
+[[package]]
 name = "tree-sitter-swift"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -699,6 +709,15 @@ version = "0.3.1"
 dependencies = [
  "anyhow",
  "tree-sitter-rust",
+ "treereduce",
+]
+
+[[package]]
+name = "treereduce-souffle"
+version = "0.3.1"
+dependencies = [
+ "anyhow",
+ "tree-sitter-souffle",
  "treereduce",
 ]
 

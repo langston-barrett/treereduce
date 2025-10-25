@@ -6,6 +6,7 @@ members = [
     "crates/treereduce-javascript",
     "crates/treereduce-lua",
     "crates/treereduce-rust",
+    "crates/treereduce-souffle",
     "crates/treereduce-swift",
 ]
 
