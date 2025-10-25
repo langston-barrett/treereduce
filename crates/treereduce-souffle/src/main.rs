@@ -4,7 +4,7 @@ use anyhow::Result;
 
 fn main() -> Result<()> {
     treereduce::cli::main(
-        tree_sitter_souffle::language(),
+        tree_sitter_souffle::LANGUAGE.into(),
         tree_sitter_souffle::NODE_TYPES,
         HashMap::from([
             // ("atom", &["0 = 0"][..]),

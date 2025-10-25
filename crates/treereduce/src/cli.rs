@@ -12,7 +12,6 @@ use clap_verbosity_flag::{InfoLevel, Verbosity};
 use regex::Regex;
 use tracing::{error, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
-use tree_sitter::Tree;
 
 use crate::check::{Check, CmdCheck};
 use crate::original::Original;
@@ -44,7 +43,7 @@ impl Default for OnParseError {
     }
 }
 
-fn handle_parse_errors(path: &str, tree: &Tree, on_parse_error: &OnParseError) {
+fn handle_parse_errors(path: &str, tree: &tree_sitter::Tree, on_parse_error: &OnParseError) {
     let node = tree.root_node();
     match on_parse_error {
         OnParseError::Ignore => (),
@@ -221,7 +220,7 @@ fn make_temp_dir(dir: &Option<String>) -> Result<()> {
     Ok(())
 }
 
-fn parse(language: tree_sitter::Language, code: &str) -> Result<tree_sitter::Tree> {
+fn parse(language: &tree_sitter::Language, code: &str) -> Result<tree_sitter::Tree> {
     let mut parser = tree_sitter::Parser::new();
     parser
         .set_language(language)
@@ -277,7 +276,7 @@ fn check(args: &Args) -> Result<CmdCheck> {
 
 fn check_initial_input_is_interesting(
     chk: &CmdCheck,
-    tree: &Tree,
+    tree: &tree_sitter::Tree,
     src: &[u8],
     source: &Option<String>,
 ) -> Result<()> {
@@ -429,7 +428,7 @@ pub fn main(
         ("<stdin>".to_string(), stdin_string()?)
     };
 
-    let tree = parse(language, &src)?;
+    let tree = parse(&language, &src)?;
     handle_parse_errors(&path, &tree, &args.on_parse_error);
     if !args.no_verify {
         check_initial_input_is_interesting(&conf.check, &tree, src.as_bytes(), &args.source)?;
