@@ -618,6 +618,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tree-sitter-smtlib2"
+version = "0.0.1"
+source = "git+https://github.com/Halbaroth/tree-sitter-smtlib2#abb78252a5e8b9974e18187a62a40474a583827a"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
 name = "tree-sitter-souffle"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -704,6 +713,15 @@ version = "0.3.1"
 dependencies = [
  "anyhow",
  "tree-sitter-rust",
+ "treereduce",
+]
+
+[[package]]
+name = "treereduce-smtlib"
+version = "0.3.1"
+dependencies = [
+ "anyhow",
+ "tree-sitter-smtlib2",
  "treereduce",
 ]
 
