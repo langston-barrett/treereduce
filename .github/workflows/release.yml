@@ -28,7 +28,7 @@ jobs:
       with:
         artifacts: "treereduce-c,treereduce-java,treereduce-javascript,treereduce-lua,treereduce-rust,treereduce-souffle,treereduce-swift"
         artifactErrorsFailBuild: true
-        body: "See [CHANGELOG.md](https://github.com/langston-barrett/treereduce/blob/main/doc/CHANGELOG.md)."
+        body: "See [changelog.md](https://github.com/langston-barrett/treereduce/blob/main/doc/changelog.md)."
         draft: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
