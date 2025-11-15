@@ -10,6 +10,9 @@ readme = "../../README.md"
 homepage = "https://github.com/langston-barrett/treereduce"
 repository = "https://github.com/langston-barrett/treereduce"
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow = "1"
 treereduce = { workspace = true }

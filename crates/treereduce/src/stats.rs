@@ -2,6 +2,7 @@ use std::io;
 use std::io::Write;
 use std::time::Duration;
 
+#[derive(Debug)]
 pub struct Pass {
     pub duration: Duration,
     pub start_size: usize,
@@ -38,6 +39,7 @@ impl Pass {
     }
 }
 
+#[derive(Debug)]
 pub struct Stats {
     pub duration: Duration,
     pub start_size: usize,

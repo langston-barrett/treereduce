@@ -30,7 +30,7 @@ use task::{PrioritizedTask, Reduction, Task, TaskId};
 use self::error::MultiPassReductionError;
 
 #[inline]
-fn node_size(node: &Node) -> usize {
+fn node_size(node: &Node<'_>) -> usize {
     debug_assert!(node.start_byte() <= node.end_byte());
     node.end_byte() - node.start_byte()
 }
@@ -168,7 +168,7 @@ impl<'a, T> ThreadCtx<'a, T>
 where
     T: Check + Send + Sync + 'static,
 {
-    fn new(ctx: &'a Ctx<T>) -> Self {
+    fn new(ctx: &'a Ctx<'_, T>) -> Self {
         let mut node_ids = HashMap::new();
         let mut queue = vec![ctx.orig.tree.root_node()];
         while let Some(node) = queue.pop() {
@@ -181,8 +181,8 @@ where
         ThreadCtx { ctx, node_ids }
     }
 
-    fn find(&self, id: &NodeId) -> Node<'a> {
-        self.node_ids[id]
+    fn find(&self, id: NodeId) -> Node<'a> {
+        self.node_ids[&id]
     }
 }
 
@@ -214,13 +214,11 @@ where
         // let point_o_one_seconds = Duration::new(0, 10000000);
         // Ok(self.tasks.wait_pop(point_o_one_seconds)?.map(|pt| pt.task))
         let task = self.tasks.pop()?;
-        debug_assert!(
-            task.as_ref().map(|t| t.priority).unwrap_or(usize::MAX) >= self.min_task_size
-        );
+        debug_assert!(task.as_ref().map_or(usize::MAX, |t| t.priority) >= self.min_task_size);
         Ok(task)
     }
 
-    fn push_task(&self, node: &Node, task: Task) -> Result<(), ReductionError> {
+    fn push_task(&self, node: &Node<'_>, task: Task) -> Result<(), ReductionError> {
         self.push_prioritized_task(node_size(node), task)
     }
 
@@ -232,7 +230,7 @@ where
         self.tasks.push(task, priority)
     }
 
-    fn push_explore_children(&self, node: Node) -> Result<(), ReductionError>
+    fn push_explore_children(&self, node: Node<'_>) -> Result<(), ReductionError>
     where
         T: Check,
     {
@@ -289,9 +287,7 @@ where
         let _span = debug_span!("Trying", id, kind, priority);
         '_outer: loop {
             let task = &ptask.task;
-            let edits = if let Some(es) = self.add_task_edit(task)? {
-                es
-            } else {
+            let Some(edits) = self.add_task_edit(task)? else {
                 debug!(
                     event = "stale",
                     id = id,
@@ -387,30 +383,29 @@ where
                         return Ok(Interesting::Yes);
                     }
                 }
-            } else {
-                debug!(
-                    event = "uninteresting",
-                    id, kind, priority, "Uninteresting {}", ptask
-                );
-                return Ok(Interesting::No);
             }
+            debug!(
+                event = "uninteresting",
+                id, kind, priority, "Uninteresting {}", ptask
+            );
+            return Ok(Interesting::No);
         }
     }
 }
 
 // TODO(#15): Refine with access to node-types.json
-fn _is_list(_node: &Node) -> bool {
+fn _is_list(_node: &Node<'_>) -> bool {
     false
 }
 
 fn explore<T: Check + Send + Sync>(
-    tctx: &ThreadCtx<T>,
+    tctx: &ThreadCtx<'_, T>,
     node_id: NodeId,
 ) -> Result<(), ReductionError> {
     // TODO(lb): Include kind in explore task to avoid find
-    let node = tctx.find(&node_id);
+    let node = tctx.find(node_id);
     let _span = debug_span!("Exploring", id = node_id.get());
-    debug!("Exploring {}...", tctx.find(&node_id).kind());
+    debug!("Exploring {}...", tctx.find(node_id).kind());
     if let Some(replaces) = tctx.ctx.replacements.get(node.kind()) {
         // TODO(lb): Benchmark locking tasks and pushing all at once
         for replace in *replaces {
@@ -453,7 +448,7 @@ fn explore<T: Check + Send + Sync>(
 }
 
 fn dispatch<T: Check + Send + Sync>(
-    tctx: &ThreadCtx<T>,
+    tctx: &ThreadCtx<'_, T>,
     ptask: PrioritizedTask,
 ) -> Result<(), ReductionError> {
     match ptask.task {
@@ -466,7 +461,7 @@ fn dispatch<T: Check + Send + Sync>(
                     Ok(())
                 }
                 Interesting::No => {
-                    tctx.ctx.push_explore_children(tctx.find(&node_id))?;
+                    tctx.ctx.push_explore_children(tctx.find(node_id))?;
                     Ok(())
                 }
                 // This tree and all of its children were deleted by an edit in
@@ -477,7 +472,7 @@ fn dispatch<T: Check + Send + Sync>(
         Task::Reduce(Reduction::DeleteAll(_)) => {
             // No need to check whether it was interesting, because the children will be
             // individually handled by `delete`.
-            let _ = tctx.ctx.interesting(&ptask);
+            let _ = tctx.ctx.interesting(&ptask)?;
             Ok(())
         }
         Task::Reduce(Reduction::Replace { node_id, .. }) => {
@@ -488,7 +483,7 @@ fn dispatch<T: Check + Send + Sync>(
                     Ok(())
                 }
                 Interesting::No => {
-                    tctx.ctx.push_explore_children(tctx.find(&node_id))?;
+                    tctx.ctx.push_explore_children(tctx.find(node_id))?;
                     Ok(())
                 }
                 Interesting::Stale => Ok(()),
@@ -498,12 +493,15 @@ fn dispatch<T: Check + Send + Sync>(
 }
 
 /// Main function for each thread
-fn work<T: Check + Send + Sync>(ctx: &Ctx<T>, num_threads: usize) -> Result<(), ReductionError> {
+fn work<T: Check + Send + Sync>(
+    ctx: &Ctx<'_, T>,
+    num_threads: usize,
+) -> Result<(), ReductionError> {
     static IDLE_THREADS: AtomicUsize = AtomicUsize::new(0);
     // Since IDLE_THREADS is static, decrement for second and later passes
     let idle = IDLE_THREADS.load(atomic::Ordering::Acquire);
     if idle > 0 {
-        IDLE_THREADS.store(idle - 1, atomic::Ordering::Release)
+        IDLE_THREADS.store(idle - 1, atomic::Ordering::Release);
     }
 
     let tctx = ThreadCtx::new(ctx);
@@ -514,7 +512,7 @@ fn work<T: Check + Send + Sync>(ctx: &Ctx<T>, num_threads: usize) -> Result<(), 
             // TODO(lb): Integrate waiting into pop?
             // TODO(lb): Benchmark the duration
             // let point_o_one_seconds = Duration::new(0, 10000000);
-            let not_long = Duration::new(0, 100000);
+            let not_long = Duration::new(0, 100_000);
             tctx.ctx.tasks.wait_for_push(not_long)?;
             IDLE_THREADS.fetch_sub(1, atomic::Ordering::Release);
         }
@@ -593,7 +591,7 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
 }
 
 // Don't care about parse errors, we're maintaining the interestingness
-fn parse(language: &tree_sitter::Language, code: &str) -> tree_sitter::Tree {
+fn parse(language: &tree_sitter::Language, code: &str) -> Tree {
     let mut parser = tree_sitter::Parser::new();
     parser
         .set_language(language)
@@ -617,16 +615,14 @@ pub fn treereduce_multi_pass<T: Clone + Check + Debug + Send + Sync + 'static>(
         info!(
             "Starting pass {} / {}",
             passes_done + 1,
-            max_passes
-                .map(|n| n.to_string())
-                .unwrap_or_else(|| "?".to_string())
+            max_passes.map_or_else(|| "?".to_string(), |n| n.to_string())
         );
         let pass_start = Instant::now();
 
         let (new, edits) = treereduce(node_types, orig, conf)?;
         orig = new;
         let mut new_src = Vec::new();
-        tree_sitter_edit::render(&mut new_src, &orig.tree, orig.text.as_slice(), &edits)?;
+        render(&mut new_src, &orig.tree, orig.text.as_slice(), &edits)?;
         let text = std::str::from_utf8(&new_src)?.to_string();
         orig = Original::new(parse(&language, &text), new_src);
 
