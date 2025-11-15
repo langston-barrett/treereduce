@@ -8,10 +8,10 @@ use tracing_subscriber::fmt::{
 use nu_ansi_term::{Color, Style};
 use tracing_subscriber::registry::LookupSpan;
 
-pub struct TerseFormatter;
+pub(super) struct TerseFormatter;
 
-fn style_for(level: &Level) -> Style {
-    match *level {
+fn style_for(level: Level) -> Style {
+    match level {
         Level::TRACE => Style::new().fg(Color::Purple),
         Level::DEBUG => Style::new().fg(Color::Blue),
         Level::INFO => Style::new().fg(Color::Green),
@@ -32,7 +32,7 @@ where
         event: &Event<'_>,
     ) -> fmt::Result {
         let metadata = event.metadata();
-        let level = metadata.level();
+        let level = *metadata.level();
         let style = style_for(level);
         for field in event.fields() {
             // Only print events with human-readable messages

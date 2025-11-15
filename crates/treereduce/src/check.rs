@@ -45,6 +45,7 @@ pub struct CmdCheck {
     // Will interact poorly with try_wait...
 }
 
+#[derive(Debug)]
 pub struct CmdCheckState {
     child: Child,
     temp_file: Option<NamedTempFile>,
@@ -69,7 +70,7 @@ impl CmdCheck {
         inherit_stderr: bool,
         timeout: Option<Duration>,
     ) -> Self {
-        let temp_dir_path: Option<std::path::PathBuf> = temp_dir.as_ref().map(From::from);
+        let temp_dir_path: Option<PathBuf> = temp_dir.as_ref().map(From::from);
         CmdCheck {
             needs_file: args.iter().any(|s| is_marker(s)),
             temp_dir: temp_dir_path.unwrap_or_else(std::env::temp_dir),
@@ -120,7 +121,7 @@ impl CmdCheck {
                 args.push(f.path().to_str().expect("Path not valid UTF-8").to_string());
                 temp_file = Some(f);
             } else {
-                args.push(arg.clone())
+                args.push(arg.clone());
             }
         }
         debug_assert!(found);
@@ -185,9 +186,9 @@ impl CmdCheck {
 
     fn is_interesting(
         &self,
-        status: &ExitStatus,
-        stdout: Option<impl io::Read>,
-        stderr: Option<impl io::Read>,
+        status: ExitStatus,
+        stdout: Option<impl Read>,
+        stderr: Option<impl Read>,
     ) -> (bool, Vec<u8>, Vec<u8>) {
         #[cfg(not(target_family = "unix"))]
         let code = status.code();
@@ -208,23 +209,19 @@ impl CmdCheck {
         let stdout_match = self
             .interesting_stdout
             .as_ref()
-            .map(|rx| rx.is_match(&out_str))
-            .unwrap_or(false);
+            .is_some_and(|rx| rx.is_match(&out_str));
         let stderr_match = self
             .interesting_stderr
             .as_ref()
-            .map(|rx| rx.is_match(&err_str))
-            .unwrap_or(false);
+            .is_some_and(|rx| rx.is_match(&err_str));
         let stdout_unmatch = self
             .uninteresting_stdout
             .as_ref()
-            .map(|rx| rx.is_match(&out_str))
-            .unwrap_or(false);
+            .is_some_and(|rx| rx.is_match(&out_str));
         let stderr_unmatch = self
             .uninteresting_stderr
             .as_ref()
-            .map(|rx| rx.is_match(&err_str))
-            .unwrap_or(false);
+            .is_some_and(|rx| rx.is_match(&err_str));
         let is_interesting = (interesting_code || stdout_match || stderr_match)
             && !stdout_unmatch
             && !stderr_unmatch;
@@ -256,7 +253,7 @@ impl CmdCheck {
         } else {
             state.child.wait()?
         };
-        let (b, o, e) = self.is_interesting(&status, state.child.stdout, state.child.stderr);
+        let (b, o, e) = self.is_interesting(status, state.child.stdout, state.child.stderr);
         Ok((b, Some(status), o, e))
     }
 }
@@ -287,7 +284,7 @@ impl Check for CmdCheck {
         }
         Ok(state.child.try_wait()?.map(|s| {
             let (b, _, _) = self.is_interesting(
-                &s,
+                s,
                 Some(stdout_bytes.as_slice()),
                 Some(stderr_bytes.as_slice()),
             );

@@ -1,15 +1,15 @@
 #[derive(Clone, Debug)]
-pub struct Versioned<T> {
+pub(crate) struct Versioned<T> {
     value: T,
     version: usize,
 }
 
 impl<T> Versioned<T> {
-    pub fn extract(self) -> T {
+    pub(crate) fn extract(self) -> T {
         self.value
     }
 
-    pub fn get(&self) -> &T {
+    pub(crate) fn get(&self) -> &T {
         &self.value
     }
 
@@ -18,7 +18,7 @@ impl<T> Versioned<T> {
         self.inc();
     }
 
-    pub fn mutate_clone<F: FnOnce(T) -> T>(&self, f: F) -> Self
+    pub(crate) fn mutate_clone<F: FnOnce(T) -> T>(&self, f: F) -> Self
     where
         T: Clone,
     {
@@ -29,11 +29,11 @@ impl<T> Versioned<T> {
         ret
     }
 
-    pub fn new(value: T) -> Self {
+    pub(crate) fn new(value: T) -> Self {
         Versioned { value, version: 0 }
     }
 
-    pub fn inc(self) -> Self {
+    pub(crate) fn inc(self) -> Self {
         Versioned {
             value: self.value,
             version: self.version + 1,
@@ -47,7 +47,7 @@ impl<T> Versioned<T> {
         }
     }
 
-    pub fn old_version(&self, other: &Versioned<T>) -> bool {
+    pub(crate) fn old_version(&self, other: &Versioned<T>) -> bool {
         self.version + 1 == other.version
     }
 

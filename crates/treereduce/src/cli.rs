@@ -27,7 +27,7 @@ pub enum OnParseError {
 }
 
 impl std::fmt::Display for OnParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             OnParseError::Ignore => write!(f, "ignore"),
             OnParseError::Warn => write!(f, "warn"),
@@ -214,7 +214,7 @@ fn read_file(file: &str) -> Result<String> {
 fn make_temp_dir(dir: &Option<String>) -> Result<()> {
     if let Some(d) = dir {
         // Just best-effort, to error out early
-        std::fs::create_dir_all(d)
+        fs::create_dir_all(d)
             .with_context(|| format!("Failed to access or create temporary directory {d}"))?;
     }
     Ok(())
@@ -238,7 +238,7 @@ fn stdin_string() -> Result<String> {
 fn check(args: &Args) -> Result<CmdCheck> {
     if args.check.is_empty() {
         error!("Internal error: empty interestingness check!");
-        std::process::exit(1);
+        process::exit(1);
     }
     let mut argv: Vec<_> = args.check.iter().collect();
     let cmd = argv[0];
@@ -260,8 +260,8 @@ fn check(args: &Args) -> Result<CmdCheck> {
         None => None,
     };
     Ok(CmdCheck::new(
-        cmd.to_string(),
-        argv.iter().map(|s| s.to_string()).collect(),
+        cmd.clone(),
+        argv.iter().map(|s| (*s).clone()).collect(),
         args.interesting_exit_code.clone(),
         args.temp_dir.clone(),
         stdout_regex,
@@ -278,7 +278,7 @@ fn check_initial_input_is_interesting(
     chk: &CmdCheck,
     tree: &tree_sitter::Tree,
     src: &[u8],
-    source: &Option<String>,
+    source: Option<&str>,
 ) -> Result<()> {
     let mut test: Vec<u8> = Vec::with_capacity(src.len());
     tree_sitter_edit::render(&mut test, tree, src, &crate::edits::Edits::new())?;
@@ -313,16 +313,14 @@ fn check_initial_input_is_interesting(
     echo $?
 
 The last line should print 0 (or any other code passed to `--interesting-exit-code`). See the usage documentation for help: https://langston-barrett.github.io/treereduce/usage.html"#,
-            source
-                .clone()
-                .unwrap_or_else(|| String::from("your-test-case")),
+            source.unwrap_or("your-test-case"),
             chk.cmd,
             args.join(" "),
             tmp_path = tmp_path,
         );
         eprintln!("{s}");
         error!(s);
-        std::process::exit(1);
+        process::exit(1);
     }
     Ok(())
 }
@@ -331,7 +329,7 @@ The last line should print 0 (or any other code passed to `--interesting-exit-co
 fn print_result(output: &str, src: &str) -> Result<()> {
     if output == "-" {
         // https://nnethercote.github.io/perf-book/io.html#locking
-        let stdout = std::io::stdout();
+        let stdout = io::stdout();
         let mut lock = stdout.lock();
         lock.write_all(src.as_bytes())?;
     } else {
@@ -367,7 +365,7 @@ fn passes(args: &Args) -> Option<usize> {
 }
 
 #[inline]
-fn log_tracing_level(level: &log::Level) -> tracing::Level {
+fn log_tracing_level(level: log::Level) -> tracing::Level {
     match level {
         log::Level::Trace => tracing::Level::TRACE,
         log::Level::Debug => tracing::Level::DEBUG,
@@ -384,7 +382,7 @@ fn init_tracing(args: &Args) {
         .with_span_events(FmtSpan::ENTER | FmtSpan::CLOSE)
         .with_target(false)
         .with_max_level(log_tracing_level(
-            &args.verbose.log_level().unwrap_or(log::Level::Info),
+            args.verbose.log_level().unwrap_or(log::Level::Info),
         ));
     if args.json {
         builder.json().init();
@@ -423,7 +421,7 @@ pub fn main(
     let conf = configure(&args, replacements)?;
 
     let (path, src) = if let Some(p) = &args.source {
-        (p.to_string(), read_file(p)?)
+        (p.clone(), read_file(p)?)
     } else {
         ("<stdin>".to_string(), stdin_string()?)
     };
@@ -431,7 +429,12 @@ pub fn main(
     let tree = parse(&language, &src)?;
     handle_parse_errors(&path, &tree, &args.on_parse_error);
     if !args.no_verify {
-        check_initial_input_is_interesting(&conf.check, &tree, src.as_bytes(), &args.source)?;
+        check_initial_input_is_interesting(
+            &conf.check,
+            &tree,
+            src.as_bytes(),
+            args.source.as_deref(),
+        )?;
     }
 
     let max_passes = passes(&args);
@@ -444,7 +447,7 @@ pub fn main(
 
     if args.stats {
         // https://nnethercote.github.io/perf-book/io.html#locking
-        let stdout = std::io::stdout();
+        let stdout = io::stdout();
         let mut lock = stdout.lock();
         stats.write_text(&mut lock)?;
     }

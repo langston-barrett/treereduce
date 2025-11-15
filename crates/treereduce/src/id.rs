@@ -10,11 +10,11 @@ pub struct NodeId {
 }
 
 impl NodeId {
-    pub fn new(node: &Node) -> Self {
+    pub fn new(node: &Node<'_>) -> Self {
         NodeId { id: node.id() }
     }
 
-    pub fn get(&self) -> usize {
+    pub fn get(self) -> usize {
         self.id
     }
 }

@@ -8,6 +8,7 @@ pub struct Original {
 }
 
 impl Original {
+    #[must_use]
     pub fn new(tree: Tree, text: Vec<u8>) -> Original {
         Original { tree, text }
     }

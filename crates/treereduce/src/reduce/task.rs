@@ -7,18 +7,18 @@ use crate::id::NodeId;
 /// Newtype
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct TaskId {
+pub(super) struct TaskId {
     pub id: usize,
 }
 
 impl TaskId {
-    pub fn get(&self) -> usize {
+    pub(super) fn get(self) -> usize {
         self.id
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Reduction {
+pub(super) enum Reduction {
     Delete(NodeId),
     DeleteAll(Vec<NodeId>),
     Replace { node_id: NodeId, with: String },
@@ -31,7 +31,7 @@ pub enum Reduction {
 //
 // TODO(lb): Split into reduction task
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Task {
+pub(super) enum Task {
     // TODO(lb): Track parent kind and field name for more accurate optionality
     Explore(NodeId),
     Reduce(Reduction),
@@ -39,7 +39,7 @@ pub enum Task {
 
 // TODO(lb): Show with priority, task ID
 impl Task {
-    pub fn kind(&self) -> String {
+    pub(super) fn kind(&self) -> String {
         match self {
             Task::Explore(_) => "explore".to_string(),
             Task::Reduce(Reduction::Delete(_)) => "delete".to_string(),
@@ -50,7 +50,7 @@ impl Task {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PrioritizedTask {
+pub(super) struct PrioritizedTask {
     #[serde(flatten)]
     pub task: Task,
     pub id: TaskId,
