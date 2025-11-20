@@ -19,7 +19,7 @@ jobs:
       with:
         access_token: ${{ github.token }}
 
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Build docs
       uses: ammaraskar/sphinx-action@master
@@ -49,7 +49,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Format
       run: cargo fmt && git diff --exit-code
     - name: Deps
@@ -63,7 +63,7 @@ jobs:
   static:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Deps
       run: |
         sudo apt-get install -y musl-tools
@@ -74,7 +74,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1
     - run: make build
     - run: make test
