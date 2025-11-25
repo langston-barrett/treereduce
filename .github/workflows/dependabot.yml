@@ -8,6 +8,6 @@ permissions:
 
 jobs:
   dependabot:
-    uses: langston-barrett/gha/.github/workflows/merge-dependabot-prs.yml@cb3dbd0181f17f451e5bf2b92fdc2a4f51ce185b
+    uses: langston-barrett/gha/.github/workflows/merge-dependabot-prs.yml@c654e65f352816f626d3e61c47245e413302f244
     with:
       only-patch: false
