@@ -7,9 +7,9 @@ You may want to take a look at:
 
 - The developer guide, specifically
 
-  * {doc}`build`
+  * [build](build.md)
 
-  * {doc}`dev`
+  * [dev](dev.md)
 
 - The [issues labeled "good first issue"][good]
 

@@ -2,10 +2,9 @@
 
 ## Features
 
-- **Fast**: `treereduce` uses a {doc}`novel algorithm <design>` for parallelized
-  reduction of tree-shaped data, based on ideas from {ref}`recent research
-  <bib>`. It has been {doc}`benchmarked <benchmarks>` against similar tools.
-- **Effective**: `treereduce` produces {doc}`small programs <benchmarks>`.
+- **Fast**: `treereduce` uses a [novel algorithm](design.md) for parallelized
+  reduction of tree-shaped data, based on ideas from [recent research](design.md#bibliography). It has been [benchmarked](benchmarks.md) against similar tools.
+- **Effective**: `treereduce` produces [small programs](benchmarks.md).
 - **Robust**: `treereduce` is based on tree-sitter grammars, which are robust to
   parse errors. This means you can reduce syntactically invalid inputs, and
   each grammar doesn't need to be 100% perfect to work for all programs.

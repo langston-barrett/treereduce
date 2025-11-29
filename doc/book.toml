@@ -1,0 +1,9 @@
+[book]
+authors = ["Langston Barrett"]
+language = "en"
+src = "src"
+title = "treereduce"
+
+[output.html]
+git-repository-url = "https://github.com/langston-barrett/treereduce"
+edit-url-template = "https://github.com/langston-barrett/treereduce/edit/main/doc/{path}"

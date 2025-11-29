@@ -6,46 +6,7 @@ on:
     - main
   pull_request:
 
-env:
-  # The NAME makes it easier to copy/paste snippets from other CI configs
-  NAME: treedd
-
 jobs:
-  doc:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Cancel previous run
-      uses: styfle/cancel-workflow-action@0.12.1
-      with:
-        access_token: ${{ github.token }}
-
-    - uses: actions/checkout@v6
-
-    - name: Build docs
-      uses: ammaraskar/sphinx-action@master
-      with:
-        docs-folder: "doc/"
-
-    - name: Push docs
-      uses: peaceiris/actions-gh-pages@v4
-      if: ${{ github.ref == 'refs/heads/main' }}
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: doc/build/html
-
-    - name: Package docs
-      shell: bash
-      run: |
-        tar -cvf doc.tar.gz doc/build/html/*
-
-    - name: Upload docs
-      uses: actions/upload-artifact@v5
-      if: github.repository == 'langston-barrett/treereduce'
-      with:
-        name: "${{ env.NAME }}-docs"
-        path: "*.tar.gz"
-        if-no-files-found: error
-
   lint:
     runs-on: ubuntu-latest
     steps:
