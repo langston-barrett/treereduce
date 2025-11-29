@@ -8,7 +8,7 @@ In addition to Cargo and rustc, you'll need `clippy` to lint your code.
 
 ## Testing
 
-Tested with `lit` and `FileCheck `. 
+Tested with `lit` and `FileCheck `.
 
 ```sh
 cargo build

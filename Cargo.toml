@@ -1,13 +1,13 @@
-[workspace] 
+[workspace]
 members = [
-    "crates/treereduce",
-    "crates/treereduce-c",
-    "crates/treereduce-java",
-    "crates/treereduce-javascript",
-    "crates/treereduce-lua",
-    "crates/treereduce-rust",
-    "crates/treereduce-souffle",
-    "crates/treereduce-swift",
+  "crates/treereduce",
+  "crates/treereduce-c",
+  "crates/treereduce-java",
+  "crates/treereduce-javascript",
+  "crates/treereduce-lua",
+  "crates/treereduce-rust",
+  "crates/treereduce-souffle",
+  "crates/treereduce-swift",
 ]
 
 # https://nnethercote.github.io/perf-book/build-configuration.html
@@ -15,7 +15,9 @@ members = [
 lto = true
 
 [workspace.dependencies]
-treereduce = { version = "0.4.0", path = "./crates/treereduce", features = ["cli"] }
+treereduce = { version = "0.4.0", path = "./crates/treereduce", features = [
+  "cli",
+] }
 
 [workspace.lints.clippy]
 # pedantic = { level = "warn", priority = -1 }

@@ -14,7 +14,7 @@ pkgs.mkShell {
 
     # Running perses/picireny:
     pkgs.jre
-    
+
     pkgs.python39Packages.python-lsp-server
     pkgs.python39Packages.virtualenv
   ];

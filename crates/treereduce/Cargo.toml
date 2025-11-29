@@ -38,4 +38,11 @@ wait-timeout = "0.2"
 
 [features]
 default = []
-cli = ["dep:anyhow", "dep:clap", "dep:clap-verbosity-flag", "dep:nu-ansi-term", "dep:num_cpus", "dep:tracing-subscriber"]
+cli = [
+  "dep:anyhow",
+  "dep:clap",
+  "dep:clap-verbosity-flag",
+  "dep:nu-ansi-term",
+  "dep:num_cpus",
+  "dep:tracing-subscriber",
+]

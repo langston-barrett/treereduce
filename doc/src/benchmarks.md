@@ -83,4 +83,3 @@ for tool in halfempty picireny treereduce; do
       "${1}" >> data.csv
 done
 ```
-

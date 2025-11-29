@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+"""Analyze reductions"""
+
+from argparse import ArgumentParser
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, unique
 from json import loads as json_loads
 from pathlib import Path
@@ -58,7 +61,7 @@ def main():
             counts[f["kind"]] += 1
 
     interesting = fields_by_event_type(events, "interesting")
-    uninteresting = fields_by_event_type(events, "uninteresting")
+    # uninteresting = fields_by_event_type(events, "uninteresting")
     retries = fields_by_event_type(events, "retry")
     stales = fields_by_event_type(events, "stale")
 
@@ -69,8 +72,12 @@ def main():
 
     reds = list(reductions(events))
 
-    print(f"Interesting deletions: {sum(1 for f in interesting if f['kind'] == 'delete')} / {counts['delete']}")
-    print(f"Interesting mass deletions: {sum(1 for f in interesting if f['kind'] == 'delete_all')} / {counts['delete_all']}")
+    print(
+        f"Interesting deletions: {sum(1 for f in interesting if f['kind'] == 'delete')} / {counts['delete']}"
+    )
+    print(
+        f"Interesting mass deletions: {sum(1 for f in interesting if f['kind'] == 'delete_all')} / {counts['delete_all']}"
+    )
     print(f"Total interesting: {len(interesting)} / {sum(counts.values())}")
     print("Executions:", len(executions))
     print("Retries:", len(retries))
@@ -78,5 +85,8 @@ def main():
     print("E[delete]:", expected_value(reds, ReductionTy.DELETE))
     print("E[delete_all]:", expected_value(reds, ReductionTy.DELETE_ALL))
 
+
 if __name__ == "__main__":
+    parser = ArgumentParser(description=__doc__)
+    parser.parse()
     main()

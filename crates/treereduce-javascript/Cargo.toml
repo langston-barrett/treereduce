@@ -2,7 +2,12 @@
 name = "treereduce-javascript"
 description = "Fast, parallel, syntax-aware program reducer for JavaScript"
 version = "0.4.0"
-keywords = ["program-reducer", "minimization", "test-case-reduction", "javascript"]
+keywords = [
+  "program-reducer",
+  "minimization",
+  "test-case-reduction",
+  "javascript",
+]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
 license = "MIT"
