@@ -17,11 +17,13 @@ lto = true
 [workspace.dependencies]
 treereduce = { version = "0.4.0", path = "./crates/treereduce", features = ["cli"] }
 
-# My preferred lint configuration
 [workspace.lints.clippy]
+# pedantic = { level = "warn", priority = -1 }
+case_sensitive_file_extension_comparisons = "allow"
 dbg_macro = "warn"
 explicit_iter_loop = "warn"
 format_push_string = "warn"
+ignore_without_reason = "warn"
 implicit_clone = "warn"
 implicit_hasher = "allow"
 inefficient_to_string = "warn"
@@ -29,6 +31,7 @@ manual_let_else = "warn"
 map_unwrap_or = "warn"
 needless_borrow = "warn"
 needless_pass_by_value = "allow"
+needless_raw_string_hashes = "allow"
 redundant_else = "warn"
 return_self_not_must_use = "warn"
 semicolon_if_nothing_returned = "warn"
@@ -39,6 +42,7 @@ unimplemented = "warn"
 uninlined_format_args = "warn"
 unreadable_literal = "warn"
 use_debug = "warn"
+
 [workspace.lints.rust]
 absolute_paths_not_starting_with_crate = "warn"
 dead_code = "warn"
