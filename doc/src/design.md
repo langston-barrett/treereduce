@@ -1,6 +1,5 @@
 # Design
 
-(algorithm-goals)=
 ## Goals
 
 The core reduction algorithm has three goals:
@@ -22,7 +21,6 @@ similar principles to those discussed in the [AFL whitepaper][afl]:
 > and not be a proof-of-concept for any specific theory. [...] The only true
 > governing principles are speed, reliability, and ease of use.
 
-(algorithm-assumptions)=
 ## Assumptions
 
 These assumptions strongly inform the algorithm design:
@@ -36,24 +34,24 @@ crashes.
 
 ## High-Level Design
 
-Due to [Assumption (1)](algorithm-assumptions), it's essential that `treereduce`
+Due to [Assumption (1)](#assumptions), it's essential that `treereduce`
 execute several interestingness tests in parallel. Luckily, for the same reason,
 lock contention is unlikely to be a major issue---so long as executing the
 interestingness test doesn't require holding a lock, most threads will spend the
 majority of their time executing the interestingness test, rather than waiting
-for locks on shared data. (This claim has been validated by {ref}`profiling
-<profiling>` several {doc}`benchmarks <benchmarks>`.)
+for locks on shared data. (This claim has been validated by [profiling](dev.md#profiling)
+several [benchmarks](benchmarks.md).)
 
 The recent paper "[PARDIS][pardis] : Priority Aware Test Case Reduction"
 highlights the importance of *prioritization* of reductions. Greedy removal of
 the *largest* subtrees leads to greatly increased performance due to faster
-interestingness tests ([Assumption (2)](algorithm-assumptions)).
+interestingness tests ([Assumption (2)](#assumptions)).
 
 With these ideas in mind, the overall algorithm design involves spinning up some
 number of threads, which share three pieces of data:
 
 1. The original text and syntax tree of the target (read-only)
-2. A prioritized max-heap of [*reduction tasks*](reduction-strategies)
+2. A prioritized max-heap of [*reduction tasks*](#reduction-strategies)
    (read-write)
 3. A set of *edits* to the syntax tree (read-write)
 
@@ -74,7 +72,6 @@ If lock contention does become an issue, it may be beneficial for each thread to
 maintain a local task heap in addition to the global one, or even to attempt
 multiple tasks before replacing the global edits.
 
-(reduction-strategies)=
 ## Reduction Strategies
 
 `treereduce` uses several strategies during program minimization:
@@ -87,7 +84,6 @@ multiple tasks before replacing the global edits.
 - *Hoisting* (TODO([#3][#3])): Nodes with a recursive structure may be replaced
   by their descendants, e.g. replacing `5 + (3 * y)` with just `y`.
 
-(bib)=
 ## Bibliography
 
 TODO(#16): BibTeX

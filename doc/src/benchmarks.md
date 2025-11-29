@@ -1,18 +1,16 @@
 # Benchmarks
 
 The following benchmarks compare Halfempty, Picireny, and `treereduce` on C
-and C++ source code; see {doc}`the overview <overview>` for general a general
+and C++ source code; see [the overview](overview.md) for general a general
 comparison of these tools.
 
 As discussed in the overview, one would generally expect that, as the more
 specialized tools, Picireny and `treereduce` will produce the smallest
 (highest-quality) outputs, with Halfempty last.
 
-```{note}
-I am not an expert on many of the tools included in these benchmarks. I have
-tried my best to understand them, but there may be more effective ways of using
-them that would lead to better results.
-```
+> **Note**: I am not an expert on many of the tools included in these benchmarks. I have
+> tried my best to understand them, but there may be more effective ways of using
+> them that would lead to better results.
 
 ## Basic program
 

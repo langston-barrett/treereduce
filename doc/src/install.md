@@ -11,7 +11,7 @@ Rust compiler and the [Cargo][cargo] build tool. [rustup][rustup] makes it very
 easy to obtain these. Then, to install the reducer for the language `<LANG>`,
 run:
 
-```
+```sh
 cargo install treereduce-<LANG>
 ```
 
@@ -19,7 +19,7 @@ This will install binaries in `~/.cargo/bin` by default.
 
 ## From Source
 
-You can also {doc}`build from source <build>`.
+You can also [build from source](build.md).
 
 [#11]: https://github.com/langston-barrett/treereduce/issues/11
 [cargo]: https://doc.rust-lang.org/cargo/

@@ -1,6 +1,6 @@
 # Development
 
-To get set up to build from source, see {doc}`build`.
+To get set up to build from source, see [build](build.md).
 
 ## Tools
 
@@ -19,7 +19,6 @@ lit --path=$PWD/test/bin --path=$PWD/target/debug test/
 
 ### Benchmarking
 
-(profiling)=
 ### Profiling
 
 Profiling multi-threaded programs is hard. Use the included [Poor Man's
