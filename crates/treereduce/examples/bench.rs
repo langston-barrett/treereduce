@@ -89,7 +89,7 @@ impl Oracle {
 }
 
 impl std::fmt::Display for Oracle {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Oracle::Clang => write!(f, "clang"),
             Oracle::ClangWerror => write!(f, "clang-werror"),
@@ -138,7 +138,7 @@ impl Config {
 }
 
 impl std::fmt::Display for Config {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Config::Default => write!(f, "default"),
             Config::Fast => write!(f, "fast"),
@@ -281,7 +281,7 @@ impl Tool {
 }
 
 impl std::fmt::Display for Tool {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Tool::Creduce => write!(f, "creduce"),
             Tool::Halfempty => write!(f, "halfempty"),
