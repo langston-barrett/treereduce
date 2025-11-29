@@ -2,6 +2,10 @@
 /venv
 /*.c
 
+# see scripts/lint/lint.py
+*.ninja
+/.out/
+
 # Tool output
 a.out
 bench.out
