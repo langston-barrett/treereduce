@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# TODO:
+# type: ignore
+
 """Create plots for benchmarks"""
 
 from argparse import ArgumentParser

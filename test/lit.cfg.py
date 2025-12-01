@@ -1,3 +1,5 @@
+# type: ignore
+
 """Configure `lit`"""
 
 import lit.formats

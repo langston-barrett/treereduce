@@ -39,7 +39,7 @@ execute several interestingness tests in parallel. Luckily, for the same reason,
 lock contention is unlikely to be a major issue---so long as executing the
 interestingness test doesn't require holding a lock, most threads will spend the
 majority of their time executing the interestingness test, rather than waiting
-for locks on shared data. (This claim has been validated by [profiling](dev.md#profiling)
+for locks on shared data. (This claim has been validated by [profiling](dev/dev.md#profiling)
 several [benchmarks](benchmarks.md).)
 
 The recent paper "[PARDIS][pardis] : Priority Aware Test Case Reduction"
