@@ -17,5 +17,6 @@
 
 # Developer Guide
 
-- [Build](build.md)
-- [Development](dev.md)
+- [Build](dev/build.md)
+- [Development](dev/dev.md)
+- [Lint](dev/lint.md)

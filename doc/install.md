@@ -19,7 +19,7 @@ This will install binaries in `~/.cargo/bin` by default.
 
 ## From Source
 
-You can also [build from source](build.md).
+You can also [build from source](dev/build.md).
 
 [#11]: https://github.com/langston-barrett/treereduce/issues/11
 [cargo]: https://doc.rust-lang.org/cargo/

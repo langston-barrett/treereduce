@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# TODO:
+# type: ignore
+
 """Analyze reductions"""
 
 from argparse import ArgumentParser

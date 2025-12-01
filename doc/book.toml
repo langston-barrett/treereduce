@@ -1,7 +1,7 @@
 [book]
 authors = ["Langston Barrett"]
 language = "en"
-src = "src"
+src = "."
 title = "treereduce"
 
 [output.html]

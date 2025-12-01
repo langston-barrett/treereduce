@@ -1,0 +1,12 @@
+[global]
+disable = [
+  "MD013", # line length
+  "MD033", # inline html
+  "MD040", # code block language
+]
+
+[MD030]
+ol-multi = 1
+ol-single = 1
+ul-multi = 1
+ul-single = 1
