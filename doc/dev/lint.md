@@ -128,6 +128,16 @@ We format TOML files with [taplo].
 git ls-files -z --exclude-standard '*.toml' | xargs -0 taplo format
 ```
 
+## ttlint
+
+We lint text files with [ttlint].
+
+[ttlint]: https://github.com/langston-barrett/ttlint
+
+```bash
+git ls-files -z --exclude-standard '**' | xargs -0 ttlint
+```
+
 ## typos
 
 We run [typos] on Markdown files.
