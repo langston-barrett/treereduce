@@ -111,20 +111,13 @@ def ls_files(pats: list[str]) -> list[str]:
 def txt_lint(
     ninja: NinjaScript, path: str, skip: set[str] | None = None
 ) -> NinjaScript:
-    if environ.get("CI") is None:
-        # requires rg
-        ninja = lint(ninja, "bom", path, skip=skip)
-        ninja = lint(ninja, "crlf", path, skip=skip)
-    ninja = lint(ninja, "merge", path, skip=skip)
-    ninja = lint(ninja, "ws", path, skip=skip)
-    return ninja
+    return lint(ninja, "ttlint", path, skip=skip)
 
 
 def txt_format(
     ninja: NinjaScript, path: str, skip: set[str] | None = None
 ) -> NinjaScript:
-    ninja = lint(ninja, "ws-fix", path, skip=skip)
-    return ninja
+    return lint(ninja, "ttlint-fix", path, skip=skip)
 
 
 # ---------------------------------------------------------
@@ -280,9 +273,9 @@ def py(scripts: NinjaScripts, skip: set[str] | None = None) -> NinjaScripts:
     scripts.lint = rules(
         scripts.lint,
         """
-    rule mypy
-      command = mypy --no-error-summary --strict -- $in && touch $out
-      description = mypy
+    rule ty
+      command = ty check -- $in && touch $out
+      description = ty
 
     rule py
       command = ./scripts/lint/py.py -- $in && touch $out
@@ -316,7 +309,7 @@ def py(scripts: NinjaScripts, skip: set[str] | None = None) -> NinjaScripts:
     for path in py:
         if Path(path).read_text().startswith("# noqa"):
             continue
-        scripts.lint = lint(scripts.lint, "mypy", path, skip=skip)
+        scripts.lint = lint(scripts.lint, "ty", path, skip=skip)
         scripts.lint = lint(scripts.lint, "ruff-check", path, skip=skip)
         scripts.lint = lint(scripts.lint, "ruff-fmt-check", path, skip=skip)
         scripts.lint = lint(scripts.lint, "py", path, skip=skip)
@@ -519,21 +512,9 @@ def go(do_format: bool, do_fix: bool, skip: set[str] | None = None) -> None:
         dedent(r"""
     builddir=.out/
 
-    rule bom
-      command = rg '\xEF\xBB\xBF' -- $in && exit 1 || touch $out
-      description = check for utf-8 byte-order mark
-
-    rule crlf
-      command = rg --multiline '\r\n' -- $in && exit 1 || touch $out
-      description = check for crlf
-
-    rule merge
-      command = grep -E '^(<<<<<<<|=======|>>>>>>>)' -- $in && exit 1 || touch $out
-      description = check for merge conflict markers
-
-    rule ws
-      command = ./scripts/lint/whitespace.py -- $in && touch $out
-      description = whitespace
+    rule ttlint
+      command = ttlint -- $in && touch $out
+      description = ttlint
     """)
     )
     fix = NinjaScript(
@@ -545,9 +526,9 @@ def go(do_format: bool, do_fix: bool, skip: set[str] | None = None) -> None:
         dedent(r"""
     builddir=.out/
 
-    rule ws-fix
-      command = ./scripts/lint/whitespace.py --fix -- $in && touch $out
-      description = whitespace --fix
+    rule ttlint-fix
+      command = ttlint --fix -- $in && touch $out
+      description = ttlint --fix
     """)
     )
     scripts = NinjaScripts(lint, fix, format)
