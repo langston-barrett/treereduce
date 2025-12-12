@@ -2,6 +2,13 @@
 
 <!-- https://keepachangelog.com/en/1.0.0/ -->
 
+## [0.4.1] - 2025-12-13
+
+- Fix bug that caused hangs ([#339])
+- Bump dependency versions
+
+[#339]: https://github.com/langston-barrett/treereduce/issues/339
+
 ## [0.4.0] - 2025-10-25
 
 - Bump dependency versions
