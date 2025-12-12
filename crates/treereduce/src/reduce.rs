@@ -495,26 +495,39 @@ fn dispatch<T: Check + Send + Sync>(
 /// Main function for each thread
 fn work<T: Check + Send + Sync>(
     ctx: &Ctx<'_, T>,
+    thread_no: usize,
     num_threads: usize,
 ) -> Result<(), ReductionError> {
+    assert!(
+        num_threads < 64,
+        "treereduce does not support 64 or more threads"
+    );
     static IDLE_THREADS: AtomicUsize = AtomicUsize::new(0);
-    // Since IDLE_THREADS is static, decrement for second and later passes
-    let idle = IDLE_THREADS.load(atomic::Ordering::Acquire);
-    if idle > 0 {
-        IDLE_THREADS.store(idle - 1, atomic::Ordering::Release);
+
+    let thread_bit = 1usize << thread_no;
+    let all_idle_mask = (1usize << num_threads) - 1;
+
+    // Since IDLE_THREADS is static, clear this thread's bit for second and later passes
+    let idle_bits = IDLE_THREADS.load(atomic::Ordering::SeqCst);
+    if idle_bits & thread_bit != 0 {
+        IDLE_THREADS.fetch_and(!thread_bit, atomic::Ordering::SeqCst);
     }
 
     let tctx = ThreadCtx::new(ctx);
     let mut idle = false;
     // Quit if all threads are idle and there are no remaining tasks
-    while IDLE_THREADS.load(atomic::Ordering::Acquire) < num_threads {
+    while IDLE_THREADS.load(atomic::Ordering::SeqCst) != all_idle_mask {
         if idle {
             // TODO(lb): Integrate waiting into pop?
             // TODO(lb): Benchmark the duration
             // let point_o_one_seconds = Duration::new(0, 10000000);
             let not_long = Duration::new(0, 100_000);
             tctx.ctx.tasks.wait_for_push(not_long)?;
-            IDLE_THREADS.fetch_sub(1, atomic::Ordering::Release);
+            let idle_bits = IDLE_THREADS.fetch_and(!thread_bit, atomic::Ordering::SeqCst);
+            debug!("Thread {} waking up!", thread_no);
+            assert!(idle_bits & thread_bit != 0);
+            let num_idle = idle_bits.count_ones();
+            debug!("{} / {} still idle.", num_idle - 1, num_threads);
         }
         while let Some(ptask) = tctx.ctx.pop_task()? {
             debug!(
@@ -526,16 +539,19 @@ fn work<T: Check + Send + Sync>(
             );
             dispatch(&tctx, ptask)?;
         }
-        let num_idle = IDLE_THREADS.fetch_add(1, atomic::Ordering::Release);
+        let idle_bits = IDLE_THREADS.fetch_or(thread_bit, atomic::Ordering::SeqCst);
+        let num_idle = (idle_bits | thread_bit).count_ones() as usize;
         debug!(
-            idle = num_idle + 1,
+            idle = num_idle,
             threads = num_threads,
-            "Idling {} / {}...",
-            num_idle + 1,
+            "Thread {} idling ({} / {})...",
+            thread_no,
+            num_idle,
             num_threads
         );
         idle = true;
     }
+    assert!(tctx.ctx.pop_task()?.is_none());
     Ok(())
 }
 
@@ -580,8 +596,9 @@ pub fn treereduce<T: Check + Debug + Send + Sync + 'static>(
     };
 
     thread::scope(|s| {
-        for _ in 0..jobs {
-            s.spawn(|| work(&ctx, jobs));
+        for i in 0..jobs {
+            let ctx = &ctx;
+            s.spawn(move || work(ctx, i, jobs));
         }
     });
 
