@@ -1,7 +1,7 @@
 [package]
 name = "treereduce-lua"
 description = "Fast, parallel, syntax-aware program reducer for Lua"
-version = "0.4.0"
+version = "0.4.1"
 keywords = ["program-reducer", "minimization", "test-case-reduction", "lua"]
 edition = "2021"
 authors = ["Langston Barrett <langston.barrett@gmail.com>"]
