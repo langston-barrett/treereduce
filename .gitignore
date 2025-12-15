@@ -2,9 +2,7 @@
 /venv
 /*.c
 
-# see scripts/lint/lint.py
-*.ninja
-/.out/
+/*.lun/
 
 # Tool output
 a.out
