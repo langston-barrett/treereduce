@@ -1,0 +1,123 @@
+# https://langston-barrett.github.io/lun/
+
+# TODO: rumdl
+
+mtime = true
+
+# -------------------------------------
+# bash
+
+[[linter]]
+name = "bash"
+cmd = "bash -n --"
+files = ["*.bash"]
+
+[[linter]]
+name = "shellcheck-bash"
+cmd = "shellcheck --color=always --shell=bash --"
+files = ["*.bash"]
+
+# -------------------------------------
+# gha
+
+[[linter]]
+name = "zizmor"
+cmd = "zizmor --"
+files = [".github/**/*.yml"]
+# fix = "zizmor --fix=safe --"
+ignore = [".github/**/dependabot.yml"] # zizmor#1341
+
+# -------------------------------------
+# json
+
+[[linter]]
+name = "jq"
+cmd = "jq null --"
+files = ["*.json"]
+
+# -------------------------------------
+# make
+
+[[linter]]
+name = "make"
+cmd = "make -n --"
+files = ["**/Makefile", "*.mk"]
+
+# -------------------------------------
+# md
+
+[[linter]]
+name = "mdlynx"
+cmd = "mdlynx --"
+files = ["*.md"]
+
+[[linter]]
+name = "typos"
+cmd = "typos --"
+files = ["*.md"]
+fix = "typos --color=always --write-changes --"
+
+# -------------------------------------
+# python
+
+[[linter]]
+name = "ruff check"
+cmd = "ruff check --quiet --"
+files = ["*.py"]
+fix = "ruff check --fix --quiet --"
+
+[[formatter]]
+name = "ruff format"
+cmd = "ruff format --quiet --"
+files = ["*.py"]
+check = "ruff format --quiet --check --"
+
+[[linter]]
+name = "ty"
+cmd = "ty check --"
+files = ["*.py"]
+
+# -------------------------------------
+# rust
+
+[[linter]]
+name = "cargo clippy"
+cmd = "cargo clippy --color=always --all-targets -- --deny warnings"
+files = ["*.rs"]
+granularity = "batch"
+configs = ["Cargo.toml"]
+fix = "cargo clippy --color=always --allow-dirty --fix"
+
+[[formatter]]
+name = "cargo fmt"
+cmd = "cargo fmt -- --color=always --"
+files = ["*.rs"]
+granularity = "batch"
+configs = ["Cargo.toml"]
+check = "cargo fmt --check"
+
+# -------------------------------------
+# sh
+
+[[linter]]
+name = "shellcheck"
+cmd = "shellcheck --color=always --shell=bash --"
+files = ["*.sh"]
+
+# -------------------------------------
+# toml
+
+[[formatter]]
+name = "taplo"
+cmd = "taplo format --"
+files = ["*.toml"]
+check = "taplo format --check --"
+
+# -------------------------------------
+# txt
+
+[[linter]]
+name = "ttlint"
+cmd = "ttlint --"
+files = ["*"]
+fix = "ttlint --fix --"
