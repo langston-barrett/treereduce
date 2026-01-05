@@ -16,4 +16,4 @@ workspace = true
 [dependencies]
 anyhow = "1"
 treereduce = { workspace = true }
-tree-sitter-lua = "0.2"
+tree-sitter-lua = "0.4"
