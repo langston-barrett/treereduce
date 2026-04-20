@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         persist-credentials: false
-    - uses: langston-barrett/gha/.github/actions/install-linters@fc3619dd7d8730f88eac66bbf15f1257de683acc
+    - uses: langston-barrett/gha/.github/actions/install-linters@b44a985fce946d41805fe58f746e46d04c612b43
     - uses: langston-barrett/lun/.github/actions/lun@4ff0bb8913126e9f4660c6fb2a10e868e709c9b7
       with:
         flags: "--color=always"
