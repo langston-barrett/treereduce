@@ -11,7 +11,7 @@ on:
 
 jobs:
   release:
-    uses: langston-barrett/gha/.github/workflows/rust-release.yml@e48498bb55f3024a52a7686f698b2360c5c75e59
+    uses: langston-barrett/gha/.github/workflows/rust-release.yml@a35f858a9bcd26fc0c80928ac8b0a85c0f791c06
     with:
       changelog: doc/changelog.md
       publish: ${{ startsWith(github.ref, 'refs/tags/v') }}
